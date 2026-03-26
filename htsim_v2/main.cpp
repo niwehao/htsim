@@ -121,11 +121,15 @@ int main() {
         }
     }
 
-    // ---- 打印路由验证 (前 2 条) ----
+    // ---- 打印路由验证 (完整) ----
     std::cout << "Route examples:\n";
-    for (int dst : {2, 5}) {
-        Route* r = routes[0][dst-1];
-        std::cout << "  GPU1→GPU" << dst << ": " << r->hop_count() << " hops\n";
+    for (int src = 1; src <= 8; src++) {
+        for (int dst = 1; dst <= 8; dst++) {
+            if (src == dst) continue;
+            Route* r = routes[src-1][dst-1];
+            std::cout << "  GPU" << src << " → GPU" << dst << ": " << r->size() << " hops\n"<<
+                     "\n";
+        }
     }
     std::cout << "\n";
 

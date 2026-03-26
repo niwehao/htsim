@@ -65,6 +65,7 @@ int main() {
     simtime_picosec phaseDuration = 0;
     auto scheduleMap = SyncScheduler::computePhaseSchedule(pktSize, &phaseDuration);
     SyncScheduler::printScheduleStats(scheduleMap, phaseDuration);
+     SyncScheduler::printFullSchedule(scheduleMap, 50);
 
     simtime_picosec totalEstimate = (simtime_picosec)TOTAL_LAYERS * 2 *
         (phaseDuration + INTERPHASE_GAP_PS);
@@ -95,7 +96,7 @@ int main() {
     // ---- Step 4: 创建 PacketFlow ----
     std::array<PacketFlow*, 8> flows;
     for (int i = 0; i < 8; i++) {
-        flows[i] = new PacketFlow();
+        flows[i] = new PacketFlow(nullptr);
         flows[i]->set_flowid((flowid_t)(i + 1));
         gpus[i]->setFlow(flows[i]);
     }

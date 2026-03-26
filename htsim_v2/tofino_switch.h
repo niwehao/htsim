@@ -63,17 +63,18 @@ public:
         }
 
         _bufUsage += sz;
-
-        // 2. 缓冲为空 → 直接转发 (sendOn 进入 Route 下一跳 = fabricQueue)
-        if (_bufUsage == sz) {
-            pkt.sendOn();
+        pkt.sendOn();
             return;
-        }
+        // // 2. 缓冲为空 → 直接转发 (sendOn 进入 Route 下一跳 = fabricQueue)
+        // if (_bufUsage == sz) {
+        //     pkt.sendOn();
+        //     return;
+        // }
 
-        // 3. 缓冲非空 → 延迟 2ms
-        _delayed.push_back({EventList::now() + BUFFER_DELAY_PS, &pkt});
-        // 注册最早到期时间
-        EventList::sourceIsPending(*this, _delayed.front().due);
+        // // 3. 缓冲非空 → 延迟 2ms
+        // _delayed.push_back({EventList::now() + BUFFER_DELAY_PS, &pkt});
+        // // 注册最早到期时间
+        // EventList::sourceIsPending(*this, _delayed.front().due);
     }
 
     // ---- EventSource: 延迟到期 → sendOn() ----

@@ -40,10 +40,9 @@
 static constexpr uint64_t PROT_RATE_Gbps       = 200;
 static constexpr uint32_t PORT_NUM              = 4;
 static constexpr mem_b    SW_QUEUE_SIZE_BYTES   = 32LL * 1024 * 1024;   // 32 MB
-
 static constexpr uint32_t HIDDEN_DIM            = 4096;
 static constexpr uint32_t BYTES_PER_ELEM        = 2;
-static constexpr uint32_t TOKENS_PER_TARGET     = 32;//128个碎片比较合理
+static constexpr uint32_t TOKENS_PER_TARGET     = 1024;//128个碎片比较合理
 static constexpr uint32_t PAYLOAD_BYTES_PER_TARGET =
     TOKENS_PER_TARGET * HIDDEN_DIM * BYTES_PER_ELEM;                    // 8 MB
 static constexpr uint32_t FRAGMENT_PAYLOAD_SIZE = 4 * 1024;            // 4 KB
@@ -60,7 +59,7 @@ static constexpr int DATA_PKT_SIZE = 14 + 15 + (int)FRAGMENT_PAYLOAD_SIZE;
 static constexpr int ACK_PKT_SIZE  = 14 + 15;
 
 // 定时 (皮秒)  1 ms = 1,000,000,000 ps
-static constexpr simtime_picosec TIMEOUT_PS        = 1000ULL * 1000000000ULL;   // 100 ms
+static constexpr simtime_picosec TIMEOUT_PS        = 20ULL * 1000000000ULL;   // 100 ms
 static constexpr simtime_picosec INTERPHASE_GAP_PS =   1ULL * 1000000000ULL;   // 1 ms
 static constexpr simtime_picosec BUFFER_DELAY_PS   =   2ULL * 1000000000ULL;   // 2 ms
 

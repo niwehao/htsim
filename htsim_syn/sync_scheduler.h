@@ -123,7 +123,7 @@ public:
         std::map<int, std::vector<ScheduleEntry>> schedule;
         simtime_picosec maxFinish = 0;
 
-        for (int frag = 0; frag < (int)TOTAL_FRAGMENTS; frag++) {
+        for (int frag = 0; frag < (int)TOTAL_FRAGMENTS; frag++) {//total frag 个节点对之间传输片的总数
             for (int src = 1; src <= (int)NUM_GPU_NODES; src++) {
                 for (int dst = 1; dst <= (int)NUM_GPU_NODES; dst++) {
                     if (src == dst) continue;
@@ -181,5 +181,45 @@ public:
                       << "last=" << std::setprecision(3) << (double)last/1e9 << "ms\n";
         }
         std::cout << "\n";
+    }
+     static void printFullSchedule(
+        const std::map<int, std::vector<ScheduleEntry>>& schedule,
+        int maxEntries = 0)
+    {
+        std::cout << "=== Full Schedule ===\n"
+                  << "  GPU  sendTime(ms)  dst  fragId\n"
+                  << "  ---  -----------  ---  ------\n";
+ 
+        int count = 0;
+        // 合并所有 GPU 的条目, 按全局时间排序
+        struct GlobalEntry {
+            int gpu;
+            simtime_picosec sendTime;
+            uint8_t dst;
+            uint16_t fragId;
+        };
+        std::vector<GlobalEntry> all;
+        for (auto& [gpu, entries] : schedule)
+            for (auto& e : entries)
+                all.push_back({gpu, e.sendTime, e.dstGpu, e.fragId});
+ 
+        std::sort(all.begin(), all.end(),
+                  [](const GlobalEntry& a, const GlobalEntry& b) {
+                      return a.sendTime < b.sendTime;
+                  });
+ 
+         for (int i = (int)all.size() - 1; i >= 0; i--) {
+            auto& e = all[i];
+            std::cout << "  GPU" << e.gpu
+                      << "  t=" << std::fixed << std::setprecision(6)
+                      << (double)e.sendTime / 1e9 << "ms"
+                      << "  → GPU" << (int)e.dst
+                      << "  frag=" << e.fragId << "\n";
+            if (maxEntries > 0 && ++count >= maxEntries) {
+                std::cout << "  ... (" << all.size() - count << " more entries)\n";
+                break;
+            }
+        }
+        std::cout << "=== Total: " << all.size() << " entries ===\n\n";
     }
 };

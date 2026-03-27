@@ -123,26 +123,55 @@ public:
         std::map<int, std::vector<ScheduleEntry>> schedule;
         simtime_picosec maxFinish = 0;
 
-        for (int frag = 0; frag < (int)TOTAL_FRAGMENTS; frag++) {//total frag 个节点对之间传输片的总数
+
+        for (int frag = 0; frag < (int)TOTAL_FRAGMENTS; frag++) {
             for (int src = 1; src <= (int)NUM_GPU_NODES; src++) {
                 for (int dst = 1; dst <= (int)NUM_GPU_NODES; dst++) {
                     if (src == dst) continue;
 
                     auto route = abstractRoute(src, dst, pktSize);
 
+                    // ---- 第一遍: 正向扫描, 找每跳的最早开始时间 ----
+                    // 暂不更新 resFree, 只计算各跳 start
+                    std::vector<simtime_picosec> hopStart(route.size());
                     simtime_picosec prevFinish = 0;
-                    simtime_picosec sendTime = 0;
 
                     for (int i = 0; i < (int)route.size(); i++) {
                         auto& hop = route[i];
-                        // 本跳开始 = max(资源空闲, 上一跳完成)
+                        simtime_picosec start = std::max(resFree[hop.resourceId],
+                                                          prevFinish);
+                        simtime_picosec finish = start + hop.drainTime;
+                        prevFinish = finish;
+                        hopStart[i] = start;
+                    }
+
+                    // ---- 第二遍: 反向推导 sendTime ----
+                    // 找到瓶颈跳 (等待时间最长的跳), 从它反推第一跳的最晚开始时间
+                    // 使得包"刚好"在每个资源空闲时到达, 不提前占用中间队列
+                    //
+                    // 瓶颈跳 k 的 start 由 resFree[k] 决定 (而非 prevFinish)
+                    // 从 k 反推: hop[0].start = hop[k].start - sum(drainTime[0..k-1])
+                    simtime_picosec sendTime = hopStart[0];
+                    for (int i = 1; i < (int)route.size(); i++) {
+                        // 如果 hop[i] 被资源限制 (resFree > 来自前一跳的 prevFinish)
+                        // 则从此跳反推更晚的 sendTime
+                        simtime_picosec sumDrain = 0;
+                        for (int j = 0; j < i; j++)
+                            sumDrain += route[j].drainTime;
+                        simtime_picosec candidateSend = hopStart[i] - sumDrain;
+                        if (candidateSend > sendTime)
+                            sendTime = candidateSend;
+                    }
+
+                    // ---- 第三遍: 用最终 sendTime 正向确定各跳时间, 更新 resFree ----
+                    prevFinish = sendTime;  // hop[0] 不早于 sendTime
+                    for (int i = 0; i < (int)route.size(); i++) {
+                        auto& hop = route[i];
                         simtime_picosec start = std::max(resFree[hop.resourceId],
                                                           prevFinish);
                         simtime_picosec finish = start + hop.drainTime;
                         resFree[hop.resourceId] = finish;
                         prevFinish = finish;
-
-                        if (i == 0) sendTime = start;
                     }
 
                     schedule[src].push_back({sendTime, (uint8_t)dst, (uint16_t)frag});
@@ -150,6 +179,33 @@ public:
                 }
             }
         }
+        // for (int frag = 0; frag < (int)TOTAL_FRAGMENTS; frag++) {//total frag 个节点对之间传输片的总数
+        //     for (int src = 1; src <= (int)NUM_GPU_NODES; src++) {
+        //         for (int dst = 1; dst <= (int)NUM_GPU_NODES; dst++) {
+        //             if (src == dst) continue;
+
+        //             auto route = abstractRoute(src, dst, pktSize);
+
+        //             simtime_picosec prevFinish = 0;
+        //             simtime_picosec sendTime = 0;
+
+        //             for (int i = 0; i < (int)route.size(); i++) {
+        //                 auto& hop = route[i];
+        //                 // 本跳开始 = max(资源空闲, 上一跳完成)
+        //                 simtime_picosec start = std::max(resFree[hop.resourceId],
+        //                                                 prevFinish);
+        //                 simtime_picosec finish = start + hop.drainTime;
+        //                 resFree[hop.resourceId] = finish;
+        //                 prevFinish = finish;
+
+        //                 if (i == 0) sendTime = start;
+        //             }
+
+        //             schedule[src].push_back({sendTime, (uint8_t)dst, (uint16_t)frag});
+        //             maxFinish = std::max(maxFinish, prevFinish);
+        //         }
+        //     }
+        // }
 
         // 按发送时间排序
         for (auto& [gpu, entries] : schedule)

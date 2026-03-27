@@ -56,25 +56,25 @@ public:
 
         // 1. 溢出检查
         if (_bufUsage + sz > SW_QUEUE_SIZE_BYTES) {
-            std::cout << "[" << _nodename << "] DROP: buffer overflow ("
-                      << _bufUsage << "+" << sz << ">" << SW_QUEUE_SIZE_BYTES << ")\n";
+            // std::cout << "[" << _nodename << "] DROP: buffer overflow ("
+            //           << _bufUsage << "+" << sz << ">" << SW_QUEUE_SIZE_BYTES << ")\n";
             pkt.free();
             return;
         }
 
         _bufUsage += sz;
-        pkt.sendOn();
+        // 2. 缓冲为空 → 直接转发 (sendOn 进入 Route 下一跳 = fabricQueue)
+        if (_bufUsage <= sz+pkt.size() ||  pkt.size()== 29) {  // 仅本包, 或者是ACK包（不占用缓冲）直接转发
+            pkt.sendOn();
             return;
-        // // 2. 缓冲为空 → 直接转发 (sendOn 进入 Route 下一跳 = fabricQueue)
-        // if (_bufUsage == sz) {
-        //     pkt.sendOn();
-        //     return;
-        // }
+        }
 
-        // // 3. 缓冲非空 → 延迟 2ms
-        // _delayed.push_back({EventList::now() + BUFFER_DELAY_PS, &pkt});
-        // // 注册最早到期时间
-        // EventList::sourceIsPending(*this, _delayed.front().due);
+        // 3. 缓冲非空 → 延迟 2ms
+        bool wasEmpty = _delayed.empty();
+        _delayed.push_back({EventList::now() + BUFFER_DELAY_PS, &pkt});
+        // 仅在队列从空变非空时注册事件, 避免每包一次 sourceIsPending
+        if (wasEmpty)
+            EventList::sourceIsPending(*this, _delayed.front().due);
     }
 
     // ---- EventSource: 延迟到期 → sendOn() ----

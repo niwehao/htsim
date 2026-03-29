@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>512-GPU 2-Level Leaf-Spine Topology</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0e1a; color: #e0e0e0; font-family: 'Segoe UI', 'PingFang SC', sans-serif; }
+  h1 { text-align: center; padding: 20px; color: #7ecfff; font-size: 22px; }
+  .subtitle { text-align: center; color: #888; font-size: 13px; margin-bottom: 10px; }
+  .legend { display: flex; justify-content: center; gap: 30px; padding: 10px 0 20px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .legend-color { width: 16px; height: 16px; border-radius: 3px; }
+  .stats { display: flex; justify-content: center; gap: 30px; padding: 15px; flex-wrap: wrap; }
+  .stat-box { background: #151b2e; border: 1px solid #2a3555; border-radius: 8px; padding: 12px 20px; text-align: center; min-width: 120px; }
+  .stat-box .val { font-size: 26px; font-weight: bold; color: #7ecfff; }
+  .stat-box .label { font-size: 11px; color: #888; margin-top: 4px; }
+  .tabs { display: flex; justify-content: center; gap: 8px; margin: 15px 0; }
+  .tab-btn { background: #151b2e; border: 1px solid #2a3555; color: #aaa; padding: 8px 18px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+  .tab-btn:hover { border-color: #7ecfff; color: #7ecfff; }
+  .tab-btn.active { background: #1e3a5f; border-color: #7ecfff; color: #fff; }
+  .tab-content { display: none; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+  .tab-content.active { display: block; }
+  .tooltip { position: fixed; background: #1e2640; border: 1px solid #3a4a6a; border-radius: 6px; padding: 10px 14px; font-size: 12px; pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 100; max-width: 280px; line-height: 1.6; }
+  .tooltip.show { opacity: 1; }
+  .info-panel { max-width: 1000px; margin: 20px auto; padding: 20px; background: #111827; border: 1px solid #2a3555; border-radius: 10px; }
+  .info-panel table { width: 100%; border-collapse: collapse; }
+  .info-panel th, .info-panel td { padding: 8px 14px; text-align: left; border-bottom: 1px solid #1e2a44; font-size: 13px; }
+  .info-panel th { color: #7ecfff; font-weight: 600; }
+  .code-block { background: #111827; border: 1px solid #2a3555; border-radius: 8px; padding: 16px; font-family: 'Fira Code', monospace; font-size: 12px; line-height: 1.6; overflow-x: auto; white-space: pre; color: #a0c0e0; max-width: 1000px; margin: 15px auto; }
+  .code-kw { color: #c792ea; }
+  .code-fn { color: #82aaff; }
+  .code-num { color: #f78c6c; }
+  .code-cmt { color: #546e7a; }
+</style>
+</head>
+<body>
+
+<h1>512-GPU 2-Level Leaf-Spine Topology</h1>
+<p class="subtitle">32 Leaf × 16 Spine — 32 ports/switch — 1:1 Oversubscription — 25 Gbps/port</p>
+
+<div class="stats">
+  <div class="stat-box"><div class="val">512</div><div class="label">GPUs</div></div>
+  <div class="stat-box"><div class="val">32</div><div class="label">Leaf Switches</div></div>
+  <div class="stat-box"><div class="val">16</div><div class="label">Spine Switches</div></div>
+  <div class="stat-box"><div class="val">48</div><div class="label">Total Switches</div></div>
+  <div class="stat-box"><div class="val">32</div><div class="label">Ports/Switch</div></div>
+  <div class="stat-box"><div class="val">4 hops</div><div class="label">Max Latency</div></div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-color" style="background:#f7c948;"></div>Spine Switch (×16)</div>
+  <div class="legend-item"><div class="legend-color" style="background:#6ee08a;"></div>Leaf Switch (×32)</div>
+  <div class="legend-item"><div class="legend-color" style="background:#e06e8a;"></div>GPU Node (×512)</div>
+  <div class="legend-item"><div style="width:30px;height:2px;background:linear-gradient(90deg,#f7c948,#6ee08a);"></div>Spine↔Leaf link</div>
+  <div class="legend-item"><div style="width:30px;height:2px;background:linear-gradient(90deg,#6ee08a,#e06e8a);"></div>Leaf↔GPU link</div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('global')">Global Topology</button>
+  <button class="tab-btn" onclick="switchTab('detail')">Leaf Detail</button>
+  <button class="tab-btn" onclick="switchTab('path')">Routing Paths</button>
+  <button class="tab-btn" onclick="switchTab('algo')">Auto-Routing Algorithm</button>
+  <button class="tab-btn" onclick="switchTab('specs')">Specifications</button>
+</div>
+
+<!-- Tab 1: Global -->
+<div id="tab-global" class="tab-content active">
+  <svg id="svg-global" viewBox="0 0 1200 600" xmlns="http://www.w3.org/2000/svg"></svg>
+</div>
+
+<!-- Tab 2: Leaf Detail -->
+<div id="tab-detail" class="tab-content">
+  <svg id="svg-detail" viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg"></svg>
+</div>
+
+<!-- Tab 3: Path -->
+<div id="tab-path" class="tab-content">
+  <svg id="svg-path" viewBox="0 0 1100 520" xmlns="http://www.w3.org/2000/svg"></svg>
+</div>
+
+<!-- Tab 4: Algorithm -->
+<div id="tab-algo" class="tab-content">
+  <div class="code-block"><span class="code-cmt">// 自动路由算法 — 只需 GPU ID, 无需硬编码路由表</span>
+
+<span class="code-kw">Route*</span> <span class="code-fn">buildRoute</span>(src_gpu, dst_gpu, leaves[], spines[], gpus[]) {
+    src_leaf  = src_gpu / <span class="code-num">16</span>          <span class="code-cmt">// GPU 所在 Leaf</span>
+    dst_leaf  = dst_gpu / <span class="code-num">16</span>
+    src_port  = src_gpu % <span class="code-num">16</span>          <span class="code-cmt">// GPU 在 Leaf 上的端口 (0..15)</span>
+    dst_port  = dst_gpu % <span class="code-num">16</span>
+
+    <span class="code-kw">if</span> (src_leaf == dst_leaf) {         <span class="code-cmt">// 同 Leaf — 1 switch hop</span>
+        Leaf[src_leaf].<span class="code-fn">appendToRoute</span>(route, src_port, dst_port)
+    } <span class="code-kw">else</span> {                             <span class="code-cmt">// 跨 Leaf — 3 switch hops</span>
+        spine = (src_gpu + dst_gpu) % <span class="code-num">16</span>  <span class="code-cmt">// ECMP 选择 Spine</span>
+
+        Leaf[src_leaf].<span class="code-fn">appendToRoute</span>(route, src_port, <span class="code-num">16</span> + spine)
+        Spine[spine].<span class="code-fn">appendToRoute</span>(route, src_leaf, dst_leaf)
+        Leaf[dst_leaf].<span class="code-fn">appendToRoute</span>(route, <span class="code-num">16</span> + spine, dst_port)
+    }
+    route += [gpus[dst_gpu].rxQueue, gpus[dst_gpu].appSink]
+}
+
+<span class="code-cmt">// 修改 NUM_GPU_NODES 即可自动扩缩:</span>
+<span class="code-cmt">//   256 GPUs → 16 Leaf × 16 Spine = 32 switches</span>
+<span class="code-cmt">//   512 GPUs → 32 Leaf × 16 Spine = 48 switches</span>
+<span class="code-cmt">//   只要 NUM_GPU_NODES / 16 ≤ 32 (Spine 端口数) 即可</span>
+</div>
+</div>
+
+<!-- Tab 5: Specs -->
+<div id="tab-specs" class="tab-content">
+  <div class="info-panel">
+    <table>
+      <tr><th colspan="2" style="font-size:15px; padding-bottom:12px;">Network Topology</th></tr>
+      <tr><td>Type</td><td>2-Level Leaf-Spine (Clos)</td></tr>
+      <tr><td>Total GPUs</td><td>512 (configurable)</td></tr>
+      <tr><td>Leaf Switches</td><td>32 — each with 16 GPU ports + 16 Spine uplinks</td></tr>
+      <tr><td>Spine Switches</td><td>16 — each with 32 Leaf ports</td></tr>
+      <tr><td>Total Switches</td><td>48</td></tr>
+      <tr><td>Ports per Switch</td><td>32</td></tr>
+      <tr><td>Link Speed</td><td>200 Gbps per port</td></tr>
+      <tr><td>Switch Fabric BW</td><td>6.4 Tbps (32 × 200 Gbps)</td></tr>
+      <tr><td>Oversubscription</td><td>1:1 (non-blocking)</td></tr>
+      <tr><td>Bisection BW</td><td>16 Spine × 32 ports × 200 Gbps = 102.4 Tbps</td></tr>
+      <tr><td>Max Hops (intra-leaf)</td><td>2 (GPU → Leaf → GPU)</td></tr>
+      <tr><td>Max Hops (inter-leaf)</td><td>4 (GPU → Leaf → Spine → Leaf → GPU)</td></tr>
+      <tr><td>ECMP Paths</td><td>16 (one per Spine)</td></tr>
+    </table>
+    <br/>
+    <table>
+      <tr><th colspan="2" style="font-size:15px; padding-bottom:12px;">Addressing</th></tr>
+      <tr><td>GPU ID</td><td>0..511 (0-indexed)</td></tr>
+      <tr><td>GPU → Leaf</td><td>leaf = gpu_id / 16</td></tr>
+      <tr><td>GPU → Local Port</td><td>port = gpu_id % 16</td></tr>
+      <tr><td>Leaf uplink port</td><td>16 + spine_index (port 16..31)</td></tr>
+      <tr><td>Spine port → Leaf</td><td>port = leaf_index (port 0..31)</td></tr>
+      <tr><td>ECMP Spine select</td><td>(src + dst) % 16</td></tr>
+    </table>
+    <br/>
+    <table>
+      <tr><th colspan="2" style="font-size:15px; padding-bottom:12px;">MOE Simulation</th></tr>
+      <tr><td>Layers</td><td>32</td></tr>
+      <tr><td>Phases per Layer</td><td>2 (DISPATCH + COMBINE)</td></tr>
+      <tr><td>All-to-All Pairs</td><td>512 × 511 = 261,632</td></tr>
+      <tr><td>Fragment Size</td><td>4 KB</td></tr>
+      <tr><td>Fragments per Target</td><td>2048</td></tr>
+      <tr><td>Payload per Target</td><td>8 MB</td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+const NUM_LEAVES = 32, NUM_SPINES = 16, GPUS_PER_LEAF = 16;
+
+// Tooltip
+const tooltip = document.getElementById('tooltip');
+function showTip(e) {
+  const tip = e.target.getAttribute('data-tip');
+  if (!tip) return;
+  tooltip.innerHTML = tip.replace(/\n/g, '<br>');
+  tooltip.classList.add('show');
+  tooltip.style.left = (e.clientX + 15) + 'px';
+  tooltip.style.top = (e.clientY - 10) + 'px';
+}
+function hideTip() { tooltip.classList.remove('show'); }
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function svgEl(tag, attrs) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+  return el;
+}
+
+// ================ TAB 1: Global Topology ================
+(function() {
+  const svg = document.getElementById('svg-global');
+
+  // Layer labels
+  svg.appendChild(svgEl('text', {x:20, y:80, fill:'#f7c948', 'font-size':14, 'font-weight':'bold'}));
+  svg.lastChild.textContent = 'Spine Layer';
+  svg.appendChild(svgEl('text', {x:20, y:95, fill:'#888', 'font-size':11}));
+  svg.lastChild.textContent = '16 switches × 32 ports';
+
+  svg.appendChild(svgEl('text', {x:20, y:280, fill:'#6ee08a', 'font-size':14, 'font-weight':'bold'}));
+  svg.lastChild.textContent = 'Leaf Layer';
+  svg.appendChild(svgEl('text', {x:20, y:295, fill:'#888', 'font-size':11}));
+  svg.lastChild.textContent = '32 switches × 32 ports';
+
+  svg.appendChild(svgEl('text', {x:20, y:470, fill:'#e06e8a', 'font-size':14, 'font-weight':'bold'}));
+  svg.lastChild.textContent = 'GPU Layer';
+  svg.appendChild(svgEl('text', {x:20, y:485, fill:'#888', 'font-size':11}));
+  svg.lastChild.textContent = '512 nodes (16 per Leaf)';
+
+  const sStartX = 180, sSpacing = 62;
+  const lStartX = 140, lSpacing = 32;
+
+  // Spine-Leaf links (show representative subset)
+  for (let s = 0; s < NUM_SPINES; s++) {
+    const sx = sStartX + s * sSpacing + 20;
+    for (let l = 0; l < NUM_LEAVES; l += 4) {
+      const lx = lStartX + l * lSpacing + 8;
+      svg.appendChild(svgEl('line', {
+        x1: sx, y1: 110, x2: lx, y2: 260,
+        stroke: '#2a4a3a', 'stroke-width': '0.5', opacity: '0.3'
+      }));
+    }
+  }
+
+  // Spine switches
+  for (let s = 0; s < NUM_SPINES; s++) {
+    const sx = sStartX + s * sSpacing;
+    const rect = svgEl('rect', {
+      x: sx, y: 60, width: 40, height: 38, rx: 5,
+      fill: '#2e2a1a', stroke: '#f7c948', 'stroke-width': 1.5,
+      'data-tip': `Spine ${s}\n32 ports → connects to all 32 Leaves\nEach port: 200 Gbps\nTotal: 6.4 Tbps`
+    });
+    rect.addEventListener('mouseenter', showTip);
+    rect.addEventListener('mouseleave', hideTip);
+    svg.appendChild(rect);
+
+    svg.appendChild(svgEl('text', {
+      x: sx + 20, y: 84, 'text-anchor': 'middle', fill: '#f7c948', 'font-size': 11
+    }));
+    svg.lastChild.textContent = `S${s}`;
+  }
+
+  // Leaf switches
+  for (let l = 0; l < NUM_LEAVES; l++) {
+    const lx = lStartX + l * lSpacing;
+    const rect = svgEl('rect', {
+      x: lx, y: 260, width: 18, height: 34, rx: 3,
+      fill: '#1a2e1e', stroke: '#6ee08a', 'stroke-width': 1.2,
+      'data-tip': `Leaf ${l}\nDown: 16 ports → GPU ${l*16}–${l*16+15}\nUp: 16 ports → Spine 0–15\nPer port: 200 Gbps`
+    });
+    rect.addEventListener('mouseenter', showTip);
+    rect.addEventListener('mouseleave', hideTip);
+    svg.appendChild(rect);
+
+    if (l % 4 === 0) {
+      svg.appendChild(svgEl('text', {
+        x: lx + 9, y: 255, 'text-anchor': 'middle', fill: '#6ee08a', 'font-size': 9
+      }));
+      svg.lastChild.textContent = `L${l}`;
+    }
+  }
+
+  // Leaf-GPU links & GPU groups
+  for (let l = 0; l < NUM_LEAVES; l++) {
+    const lx = lStartX + l * lSpacing + 9;
+    svg.appendChild(svgEl('line', {
+      x1: lx, y1: 296, x2: lx, y2: 440,
+      stroke: '#6ee08a', 'stroke-width': 0.8, opacity: 0.3
+    }));
+
+    const gpuRect = svgEl('rect', {
+      x: lx - 7, y: 440, width: 14, height: 50, rx: 2,
+      fill: '#3a1828', stroke: '#e06e8a', 'stroke-width': 0.8,
+      'data-tip': `GPU Group (Leaf ${l})\n16 GPUs: ${l*16}–${l*16+15}\nEach GPU: 200 Gbps uplink`
+    });
+    gpuRect.addEventListener('mouseenter', showTip);
+    gpuRect.addEventListener('mouseleave', hideTip);
+    svg.appendChild(gpuRect);
+
+    if (l % 4 === 0) {
+      svg.appendChild(svgEl('text', {
+        x: lx, y: 508, 'text-anchor': 'middle', fill: '#e06e8a', 'font-size': 8
+      }));
+      svg.lastChild.textContent = `${l*16}–${l*16+15}`;
+    }
+  }
+
+  // Full-mesh annotation
+  svg.appendChild(svgEl('text', {
+    x: 600, y: 200, 'text-anchor': 'middle', fill: '#555', 'font-size': 12, 'font-style': 'italic'
+  }));
+  svg.lastChild.textContent = '← Full mesh: every Spine connects to every Leaf (16×32 = 512 links) →';
+})();
+
+// ================ TAB 2: Leaf Detail ================
+(function() {
+  const svg = document.getElementById('svg-detail');
+
+  svg.appendChild(svgEl('text', {x:500, y:30, 'text-anchor':'middle', fill:'#7ecfff', 'font-size':16, 'font-weight':'bold'}));
+  svg.lastChild.textContent = 'Single Leaf Switch Internal View (32 ports)';
+
+  // Switch box
+  svg.appendChild(svgEl('rect', {x:150, y:160, width:700, height:120, rx:10, fill:'#1a2e1e', stroke:'#6ee08a', 'stroke-width':2}));
+  svg.appendChild(svgEl('text', {x:500, y:225, 'text-anchor':'middle', fill:'#6ee08a', 'font-size':18, 'font-weight':'bold'}));
+  svg.lastChild.textContent = 'Leaf Switch L (32 ports, 6.4 Tbps fabric)';
+
+  // Downlink ports (0..15)
+  svg.appendChild(svgEl('text', {x:250, y:155, 'text-anchor':'middle', fill:'#e06e8a', 'font-size':12}));
+  svg.lastChild.textContent = 'Downlink Ports 0–15 (→ 16 GPUs)';
+
+  for (let p = 0; p < 16; p++) {
+    const px = 175 + p * 42;
+    // Port box
+    svg.appendChild(svgEl('rect', {x:px, y:280, width:28, height:20, rx:3, fill:'#2a1e2e', stroke:'#e06e8a', 'stroke-width':1}));
+    svg.appendChild(svgEl('text', {x:px+14, y:294, 'text-anchor':'middle', fill:'#e06e8a', 'font-size':9}));
+    svg.lastChild.textContent = `P${p}`;
+
+    // GPU
+    svg.appendChild(svgEl('line', {x1:px+14, y1:302, x2:px+14, y2:370, stroke:'#e06e8a', 'stroke-width':1, opacity:0.5}));
+    svg.appendChild(svgEl('rect', {x:px+2, y:370, width:24, height:24, rx:4, fill:'#3a1828', stroke:'#e06e8a', 'stroke-width':1}));
+    svg.appendChild(svgEl('text', {x:px+14, y:387, 'text-anchor':'middle', fill:'#e06e8a', 'font-size':8}));
+    svg.lastChild.textContent = `G${p}`;
+  }
+
+  // Uplink ports (16..31)
+  svg.appendChild(svgEl('text', {x:500, y:155, 'text-anchor':'end', fill:'#f7c948', 'font-size':12}));
+  svg.lastChild.textContent = '';
+  svg.appendChild(svgEl('text', {x:700, y:155, 'text-anchor':'middle', fill:'#f7c948', 'font-size':12}));
+  svg.lastChild.textContent = 'Uplink Ports 16–31 (→ 16 Spines)';
+
+  for (let p = 0; p < 16; p++) {
+    const px = 175 + p * 42;
+    // Port box (top)
+    svg.appendChild(svgEl('rect', {x:px, y:138, width:28, height:20, rx:3, fill:'#2e2a1a', stroke:'#f7c948', 'stroke-width':1}));
+    svg.appendChild(svgEl('text', {x:px+14, y:152, 'text-anchor':'middle', fill:'#f7c948', 'font-size':9}));
+    svg.lastChild.textContent = `P${16+p}`;
+
+    // Spine
+    svg.appendChild(svgEl('line', {x1:px+14, y1:138, x2:px+14, y2:70, stroke:'#f7c948', 'stroke-width':1, opacity:0.5}));
+    svg.appendChild(svgEl('rect', {x:px+2, y:46, width:24, height:24, rx:4, fill:'#2e2a1a', stroke:'#f7c948', 'stroke-width':1}));
+    svg.appendChild(svgEl('text', {x:px+14, y:62, 'text-anchor':'middle', fill:'#f7c948', 'font-size':8}));
+    svg.lastChild.textContent = `S${p}`;
+  }
+
+  // Annotation
+  svg.appendChild(svgEl('rect', {x:250, y:420, width:500, height:65, rx:6, fill:'#111827', stroke:'#2a3555'}));
+  svg.appendChild(svgEl('text', {x:270, y:442, fill:'#ccc', 'font-size':12}));
+  svg.lastChild.textContent = 'Port 0–15:  downlink to GPU (port p → GPU L×16 + p)';
+  svg.appendChild(svgEl('text', {x:270, y:462, fill:'#ccc', 'font-size':12}));
+  svg.lastChild.textContent = 'Port 16–31: uplink to Spine (port 16+s → Spine s)';
+  svg.appendChild(svgEl('text', {x:270, y:480, fill:'#7ecfff', 'font-size':12}));
+  svg.lastChild.textContent = '→ 16 down + 16 up = 1:1 oversubscription (non-blocking)';
+})();
+
+// ================ TAB 3: Routing Paths ================
+(function() {
+  const svg = document.getElementById('svg-path');
+  const defs = svgEl('defs', {});
+  ['green','#6ee08a','blue','#48b5f7','yellow','#f7c948','red','#e06e8a'].reduce((a, v, i) => {
+    if (i % 2 === 0) { a.push(v); return a; }
+    const m = svgEl('marker', {id:'arr-'+a.pop(), markerWidth:8, markerHeight:6, refX:8, refY:3, orient:'auto'});
+    m.appendChild(svgEl('polygon', {points:'0,0 8,3 0,6', fill:v}));
+    defs.appendChild(m);
+    return a;
+  }, []);
+  svg.appendChild(defs);
+
+  // Case 1: Intra-Leaf
+  svg.appendChild(svgEl('text', {x:250, y:30, 'text-anchor':'middle', fill:'#7ecfff', 'font-size':15, 'font-weight':'bold'}));
+  svg.lastChild.textContent = 'Case 1: Intra-Leaf (same Leaf)';
+
+  const c1 = [{label:'GPU 3', color:'#e06e8a', bg:'#3a1828', x:120, y:380},
+              {label:'Leaf 0', color:'#6ee08a', bg:'#1a2e1e', x:200, y:230},
+              {label:'GPU 10', color:'#e06e8a', bg:'#3a1828', x:320, y:380}];
+  c1.forEach(n => {
+    svg.appendChild(svgEl('rect', {x:n.x, y:n.y, width:90, height:36, rx:6, fill:n.bg, stroke:n.color, 'stroke-width':1.5}));
+    svg.appendChild(svgEl('text', {x:n.x+45, y:n.y+23, 'text-anchor':'middle', fill:n.color, 'font-size':13}));
+    svg.lastChild.textContent = n.label;
+  });
+
+  // Arrows
+  [{x1:165,y1:380,x2:225,y2:268,c:'green'},{x1:265,y1:268,x2:345,y2:380,c:'green'}].forEach(a => {
+    svg.appendChild(svgEl('line', {x1:a.x1,y1:a.y1,x2:a.x2,y2:a.y2,stroke:a.c==='green'?'#6ee08a':'#48b5f7','stroke-width':2.5,'marker-end':`url(#arr-${a.c})`}));
+  });
+  svg.appendChild(svgEl('text', {x:250, y:340, 'text-anchor':'middle', fill:'#888', 'font-size':12}));
+  svg.lastChild.textContent = '2 hops (1 switch)';
+  svg.appendChild(svgEl('text', {x:250, y:358, 'text-anchor':'middle', fill:'#666', 'font-size':11}));
+  svg.lastChild.textContent = 'GPU → Leaf → GPU';
+  svg.appendChild(svgEl('text', {x:250, y:440, 'text-anchor':'middle', fill:'#555', 'font-size':11}));
+  svg.lastChild.textContent = 'GPU 3 & 10 both on Leaf 0 (port 3 → port 10)';
+
+  // Case 2: Inter-Leaf
+  svg.appendChild(svgEl('text', {x:800, y:30, 'text-anchor':'middle', fill:'#f7c948', 'font-size':15, 'font-weight':'bold'}));
+  svg.lastChild.textContent = 'Case 2: Inter-Leaf (different Leaf)';
+
+  const c2 = [
+    {label:'GPU 5',   color:'#e06e8a', bg:'#3a1828', x:580, y:420, sub:'Leaf 0, port 5'},
+    {label:'Leaf 0',  color:'#6ee08a', bg:'#1a2e1e', x:610, y:310},
+    {label:'Spine 9', color:'#f7c948', bg:'#2e2a1a', x:720, y:170},
+    {label:'Leaf 18', color:'#6ee08a', bg:'#1a2e1e', x:850, y:310},
+    {label:'GPU 300', color:'#e06e8a', bg:'#3a1828', x:870, y:420, sub:'Leaf 18, port 12'},
+  ];
+  c2.forEach(n => {
+    svg.appendChild(svgEl('rect', {x:n.x, y:n.y, width:100, height:36, rx:6, fill:n.bg, stroke:n.color, 'stroke-width':1.5}));
+    svg.appendChild(svgEl('text', {x:n.x+50, y:n.y+23, 'text-anchor':'middle', fill:n.color, 'font-size':13}));
+    svg.lastChild.textContent = n.label;
+    if (n.sub) {
+      svg.appendChild(svgEl('text', {x:n.x+50, y:n.y+52, 'text-anchor':'middle', fill:'#666', 'font-size':10}));
+      svg.lastChild.textContent = n.sub;
+    }
+  });
+
+  [{x1:625,y1:420,x2:645,y2:348,c:'green'},
+   {x1:680,y1:310,x2:745,y2:208,c:'yellow'},
+   {x1:795,y1:208,x2:875,y2:310,c:'yellow'},
+   {x1:905,y1:348,x2:915,y2:420,c:'green'}].forEach(a => {
+    const colors = {green:'#6ee08a',yellow:'#f7c948',blue:'#48b5f7'};
+    svg.appendChild(svgEl('line', {x1:a.x1,y1:a.y1,x2:a.x2,y2:a.y2,stroke:colors[a.c],'stroke-width':2.5,'marker-end':`url(#arr-${a.c})`}));
+  });
+
+  svg.appendChild(svgEl('text', {x:800, y:280, 'text-anchor':'middle', fill:'#888', 'font-size':12}));
+  svg.lastChild.textContent = '4 hops (3 switches)';
+  svg.appendChild(svgEl('text', {x:800, y:298, 'text-anchor':'middle', fill:'#666', 'font-size':11}));
+  svg.lastChild.textContent = 'GPU → Leaf → Spine → Leaf → GPU';
+
+  // ECMP note
+  svg.appendChild(svgEl('text', {x:800, y:500, 'text-anchor':'middle', fill:'#48b5f7', 'font-size':11}));
+  svg.lastChild.textContent = 'ECMP: spine = (5 + 300) % 16 = 9 → Spine 9';
+})();
+</script>
+</body>
+</html>

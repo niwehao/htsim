@@ -81,7 +81,7 @@ static constexpr mem_b HUGE_BUFFER = (mem_b)1 * 1024 * 1024 * 1024;
 // 每目标数据传输时间 at 200 Gbps
 //   2048 fragments * 4125 bytes * 8 bits / 200 Gbps = 337,920,000 ps ~ 338 us
 static constexpr simtime_picosec SLOT_TX_TIME_PS =
-    (simtime_picosec)TOTAL_FRAGMENTS * DATA_PKT_SIZE * 8ULL * 1000ULL
+    (simtime_picosec)TOTAL_FRAGMENTS * DATA_PKT_SIZE * 1ULL * 1000ULL
     / PROT_RATE_Gbps;
 
 // 时隙活动时间 (传输时间 + 5% 余量, 容纳 ACK 交错和排队抖动)

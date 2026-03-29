@@ -1,20 +1,10 @@
 /*
- * constants.h  —  512-GPU Leaf-Spine 同步调度版
+ * constants.h  —  OCS Synchronized scheduling simulation constants
  *
- * 拓扑: 2 层 Leaf-Spine (自动路由, 无硬编码)
- *
- *   32 Leaf × 16 Spine, 每交换机 32 端口
- *   Leaf: 下行端口 0..15 (连 GPU), 上行端口 16..31 (连 Spine)
- *   Spine: 端口 0..31 (连 Leaf)
- *
- * 只需修改 NUM_GPU_NODES 即可自动调整拓扑.
- *
- * 包含:
- *   §1  网络/MOE 常量 + 拓扑参数
- *   §2  自动路由
- *   §3  MoePacket
- *   §4  TimerEvent
- *   §5  NodeStats
+ * Topology: N GPUs connected via 1 OCS switch
+ *   N-1 time slots per cycle (Circle Method)
+ *   All-to-all communication (every GPU sends to every other GPU)
+ *   GPU controls send timing, EcsBuffer handles routing
  */
 
 #pragma once
@@ -24,101 +14,126 @@
 #include "queue.h"
 #include "config.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <cstring>
 #include <functional>
 #include <iomanip>
 #include <iostream>
 #include <map>
+#include <random>
+#include <queue>
 #include <set>
 #include <string>
 #include <tuple>
 #include <vector>
 
 // ================================================================
-//  §1  网络 / MOE 常量 + 拓扑参数
+//  S1  Network / MOE constants
 // ================================================================
 
-// ---- 可调参数 ----
-static constexpr uint32_t NUM_GPU_NODES       = 128;//start512 32
-static constexpr uint32_t PRINT_MOD       = NUM_GPU_NODES/32;//start512 32
-static constexpr uint32_t PORTS_PER_SWITCH    = 16;
-static constexpr int      LOG_LEVEL           = 1;  // 0=silent, 1=milestone, 2=verbose
+static constexpr uint32_t NUM_GPU_NODES         = 128;
+static constexpr uint32_t TOTAL_LAYERS          = 4;
+static constexpr uint32_t NUM_ACTIVE_EXPERTS    = NUM_GPU_NODES - 1;  // all-to-all
 
-// ---- 自动推导 ----
-static constexpr uint32_t GPUS_PER_LEAF       = PORTS_PER_SWITCH / 2;  // 16
-static constexpr uint32_t NUM_UPLINKS_PER_LEAF= PORTS_PER_SWITCH / 2;  // 16
-static constexpr uint32_t NUM_LEAVES          = NUM_GPU_NODES / GPUS_PER_LEAF; // 32
-static constexpr uint32_t NUM_SPINES          = NUM_UPLINKS_PER_LEAF;  // 16
-static constexpr uint32_t NUM_SWITCHES        = NUM_LEAVES + NUM_SPINES; // 48
-
-static_assert(NUM_GPU_NODES % GPUS_PER_LEAF == 0,
-              "NUM_GPU_NODES must be divisible by GPUS_PER_LEAF");
-static_assert(NUM_LEAVES <= PORTS_PER_SWITCH,
-              "NUM_LEAVES exceeds Spine port count");
-
-// ---- 链路参数 ----
-static constexpr uint64_t PROT_RATE_Gbps      = 200;
-static constexpr mem_b    SW_QUEUE_SIZE_BYTES  = 64LL * 1024 * 1024;  // 64 MB
-
-// ---- MOE 参数 ----
-static constexpr uint32_t HIDDEN_DIM           = 4096;
-static constexpr uint32_t BYTES_PER_ELEM       = 2;
-static constexpr uint32_t TOKENS_PER_TARGET    = 256;
+static constexpr uint64_t PROT_RATE_Gbps        = 200;
+static constexpr uint32_t OCS_PORT_NUM          = NUM_GPU_NODES;
+static constexpr uint32_t HIDDEN_DIM            = 4096;
+static constexpr uint32_t BYTES_PER_ELEM        = 2;
+static constexpr uint32_t TOKENS_PER_TARGET     = 128;
 static constexpr uint32_t PAYLOAD_BYTES_PER_TARGET =
-    TOKENS_PER_TARGET * HIDDEN_DIM * BYTES_PER_ELEM;                  // 8 MB
-static constexpr uint32_t FRAGMENT_PAYLOAD_SIZE = 4 * 1024;           // 4 KB
-static constexpr uint32_t TOTAL_FRAGMENTS      =
-    PAYLOAD_BYTES_PER_TARGET / FRAGMENT_PAYLOAD_SIZE;                  // 2048
-static constexpr uint32_t TOTAL_LAYERS         = 1;
+    TOKENS_PER_TARGET * HIDDEN_DIM * BYTES_PER_ELEM;
+static constexpr uint32_t FRAGMENT_PAYLOAD_SIZE = 4 * 1024;
+static constexpr uint32_t TOTAL_FRAGMENTS       =
+    PAYLOAD_BYTES_PER_TARGET / FRAGMENT_PAYLOAD_SIZE;
+static constexpr uint32_t NUM_SLOTS             = NUM_GPU_NODES - 1;
 
 static constexpr int DATA_PKT_SIZE = 14 + 15 + (int)FRAGMENT_PAYLOAD_SIZE;
 static constexpr int ACK_PKT_SIZE  = 14 + 15;
 
-// 定时 (皮秒)
-static constexpr simtime_picosec TIMEOUT_PS        = 10ULL * 1000000000ULL;  // 10 ms
-static constexpr simtime_picosec INTERPHASE_GAP_PS =  1ULL * 1000000000ULL;  // 1 ms
-static constexpr simtime_picosec BUFFER_DELAY_PS   =  2ULL * 1000000000ULL;  // 2 ms
+// Timing (picoseconds)
+static constexpr simtime_picosec TIMEOUT_PS        = 20ULL * 1000000000ULL;
+static constexpr simtime_picosec INTERPHASE_GAP_PS =   1ULL * 1000000000ULL;
 
-// 速率 (bps)
-static const linkspeed_bps LINK_SPEED_BPS   = speedFromGbps(PROT_RATE_Gbps);
-static const linkspeed_bps FABRIC_SPEED_BPS =
-    speedFromGbps(PROT_RATE_Gbps * PORTS_PER_SWITCH);
+// OCS reconfiguration delay: 10 us
+static constexpr simtime_picosec RECONFIG_DELAY_PS = 10ULL * 1000000ULL;
 
-static constexpr mem_b HUGE_BUFFER = (mem_b)1 * 1024 * 1024 * 1024;
+// Link speed
+static const linkspeed_bps LINK_SPEED_BPS = speedFromGbps(PROT_RATE_Gbps);
 
-// ================================================================
-//  §2  自动路由
-// ================================================================
+// GPU <-> EcsBuffer: instant transfer
+static const linkspeed_bps GPU_LOCAL_SPEED = speedFromGbps(10000);
 
-inline uint32_t gpuToLeaf(uint32_t gpuId) {
-    return gpuId / GPUS_PER_LEAF;
-}
-
-inline uint32_t gpuToLocalPort(uint32_t gpuId) {
-    return gpuId % GPUS_PER_LEAF;
-}
-
-inline uint32_t leafUpPort(uint32_t spineIdx) {
-    return GPUS_PER_LEAF + spineIdx;
-}
-
-inline uint32_t spineSelectECMP(uint32_t src, uint32_t dst) {
-    return (src + dst) % NUM_SPINES;
-}
+// Queue buffer
+static constexpr mem_b HUGE_BUFFER = (mem_b)2LL * 1024 * 1024 * 1024;
 
 // ================================================================
-//  §3  MoePacket
+//  S2  HOHO time slot parameters
+// ================================================================
+
+static constexpr simtime_picosec SLOT_TX_TIME_PS =
+    (simtime_picosec)TOTAL_FRAGMENTS * DATA_PKT_SIZE * 8ULL * 1000ULL * 10ULL
+    / PROT_RATE_Gbps;
+
+static constexpr simtime_picosec SLICE_ACTIVE_PS =
+    SLOT_TX_TIME_PS + SLOT_TX_TIME_PS / 20;
+
+static constexpr simtime_picosec SLICE_TOTAL_PS =
+    SLICE_ACTIVE_PS + RECONFIG_DELAY_PS;
+
+static constexpr simtime_picosec CYCLE_PS =
+    (simtime_picosec)NUM_SLOTS * SLICE_TOTAL_PS;
+
+static constexpr mem_b OCS_TX_BUFFER = 256LL * 1024 * 1024;
+
+static constexpr simtime_picosec OCS_LINK_DELAY_PS = 100ULL * 1000ULL;
+
+static constexpr bool VERBOSE_LOG = (NUM_GPU_NODES <= 16);
+
+// ================================================================
+//  S3  All-to-all target selection
+// ================================================================
+
+inline std::vector<uint16_t> selectMoeTargets(uint16_t nodeId, int /*layer*/, int /*phase*/) {
+    std::vector<uint16_t> targets;
+    for (uint16_t i = 1; i <= NUM_GPU_NODES; i++)
+        if (i != nodeId) targets.push_back(i);
+    return targets;
+}
+
+struct PhaseAssignment {
+    std::vector<uint16_t> send_targets;
+    std::vector<uint16_t> recv_from;
+};
+
+inline std::map<uint16_t, PhaseAssignment> computePhaseAssignments(int layer, int phase) {
+    std::map<uint16_t, PhaseAssignment> assignments;
+    for (uint16_t gpu = 1; gpu <= NUM_GPU_NODES; gpu++)
+        assignments[gpu] = PhaseAssignment{};
+
+    for (uint16_t gpu = 1; gpu <= NUM_GPU_NODES; gpu++) {
+        auto targets = selectMoeTargets(gpu, layer, phase);
+        assignments[gpu].send_targets = targets;
+        for (auto t : targets)
+            assignments[t].recv_from.push_back(gpu);
+    }
+    return assignments;
+}
+
+// ================================================================
+//  S4  MoePacket
 // ================================================================
 
 class MoePacket : public Packet {
 public:
-    uint8_t  pktType    = 0;
-    uint64_t roundId    = 0;
-    uint16_t srcId      = 0;   // 0..511
-    uint16_t targetId   = 0;
-    uint16_t fragId     = 0;
-    uint16_t totalFrags = 0;
+    uint8_t  pktType     = 0;
+    uint64_t roundId     = 0;
+    uint16_t srcId       = 0;
+    uint16_t targetId    = 0;
+    uint16_t fragId      = 0;
+    uint16_t totalFrags  = 0;
+    int16_t  target_slice = -1;
 
     static constexpr uint8_t PKT_DATA = 0;
     static constexpr uint8_t PKT_ACK  = 1;
@@ -138,12 +153,13 @@ public:
     {
         MoePacket* p = _db.allocPacket();
         p->set_route(flow, route, pktSize, _nextId++);
-        p->pktType    = pktType;
-        p->roundId    = roundId;
-        p->srcId      = srcId;
-        p->targetId   = targetId;
-        p->fragId     = fragId;
-        p->totalFrags = (uint16_t)TOTAL_FRAGMENTS;
+        p->pktType      = pktType;
+        p->roundId       = roundId;
+        p->srcId         = srcId;
+        p->targetId      = targetId;
+        p->fragId        = fragId;
+        p->totalFrags    = (uint16_t)TOTAL_FRAGMENTS;
+        p->target_slice  = -1;
         return p;
     }
 
@@ -155,12 +171,13 @@ public:
 };
 
 // ================================================================
-//  §4  TimerEvent
+//  S5  TimerEvent
 // ================================================================
 
 class TimerEvent : public EventSource {
 public:
-    TimerEvent(const std::string& name) : EventSource(name) {}
+    TimerEvent(const std::string& name)
+        : EventSource(name) {}
 
     void arm(simtime_picosec delay, std::function<void()> cb) {
         _gen++;
@@ -179,7 +196,7 @@ private:
 };
 
 // ================================================================
-//  §5  NodeStats
+//  S6  NodeStats
 // ================================================================
 
 struct TaskRecord {
@@ -211,8 +228,7 @@ public:
         return n;
     }
     void printSummary() const {
-        std::cout << "  Node " << nodeId
-                  << ": TX=" << totalTx
+        std::cout << "  TX=" << totalTx << " tasks=" << totalTasks
                   << " retx=" << totalFragRetransmits
                   << " perfect=" << perfectCount() << "/" << totalTasks << "\n";
     }
@@ -229,7 +245,7 @@ inline void printGlobalSummary() {
     }
     std::string sep(60, '=');
     std::cout << "\n" << sep << "\n"
-              << "        GLOBAL MOE COMMUNICATION STATS (SYNC)\n" << sep << "\n"
+              << "        GLOBAL MOE COMMUNICATION STATS\n" << sep << "\n"
               << "  Nodes=" << g_allStats.size() << " TX=" << tx
               << " minTX=" << exp << " tasks=" << tasks
               << " retx=" << retx << " perfect=" << perf << "/" << tasks;
@@ -238,18 +254,4 @@ inline void printGlobalSummary() {
     if (exp)   std::cout << " overhead=" << std::setprecision(2)
                          << 100.0*retx/exp << "%";
     std::cout << "\n" << sep << "\n";
-
-    uint32_t printCount = 0;
-    for (auto* s : g_allStats) {
-        if (s->totalFragRetransmits > 0) {
-            s->printSummary();
-            printCount++;
-        }
-    }
-    if (printCount == 0)
-        std::cout << "  All nodes: 0 retransmissions (perfect delivery)\n";
-    else
-        std::cout << "  (" << (g_allStats.size() - printCount)
-                  << " nodes with 0 retransmissions omitted)\n";
-    std::cout << sep << "\n";
 }

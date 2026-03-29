@@ -1,22 +1,37 @@
 /*
- * sync_scheduler.h  —  512-GPU Leaf-Spine 同步预调度 (v11)
+ * sync_scheduler.h  —  512-GPU Leaf-Spine 同步预调度 (v13)
  *
- * v11 关键改进:
+ * v12 crash 根因:
+ *   ECMP 映射 spine = (ps + pd) % S 构成 Latin Square.
+ *   同一 leaf 多个 GPU 发往同一 spine 时, 共享 srcLeaf egressQ (per uplink port).
+ *   egressQ 排水 = dtPort >> dtFabric → 调度器低估 spine 到达时间 → 堆积 crash.
  *
- * 1. 精确 pipeline 模型:
- *    仿真路径: sendTime → txQueue(dtPort) → ingressQ(dtPort) → fabricQ(dtFabric) → ...
- *    每个 fabricQ hop 之间: egressQ(dtPort) + ingressQ(dtPort) = 2*dtPort
- *    sendTime 由 srcLeaf fabricQ 时隙反推: sendTime = srcFabStart - 2*dtPort
+ * v13 修复: 增加 leafEgFree[srcLeaf][spine] 追踪 srcLeaf egressQ.
+ *   确保同一 (srcLeaf, spine) 的两个包 sendTime 间隔 ≥ dtPort
+ *   → egressQ 无排队 → pipeline timing 确定 → spine 预测准确
  *
- * 2. 资源追踪:
- *    - txFree[gpu]: 每 GPU 的 NIC 带宽约束 (发送间隔 >= dtPort)
- *    - fabLeafFree[leaf]: srcLeaf fabricQ 无冲突
- *    - fabSpineFree[spine]: spine fabricQ 无冲突 (从 spine 反向传播到 srcLeaf)
- *    - 不追踪 dstLeaf fabricQ (避免 resFree 空洞问题, BufferGate 容忍少量排队)
+ * 完整 pipeline (跨 leaf):
+ *   T → txQ(dtPort) → ingressQ(dtPort) → BufferGate → fabricQ(dtFabric)
+ *     → BufferRelease → egressQ(dtPort) → spine_ingressQ(dtPort)
+ *     → spine_BufferGate → spine_fabricQ(dtFabric) → ...
  *
- * 3. Dst rotation + leaf-interleaved src order (继承 v10)
+ *   设 T = sendTime:
+ *     srcLeaf fabricQ 到达:  T + 2·dtPort
+ *     srcLeaf egressQ 到达:  T + 2·dtPort + dtFabric      ← NEW: 追踪这里
+ *     spine BufferGate 到达: T + 4·dtPort + dtFabric
+ *     spine fabricQ 到达:    T + 4·dtPort + dtFabric       (same, BG is pass-through)
  *
- * 迭代: frag → dst_idx → src (交织 leaf)
+ * 资源追踪 (5 类):
+ *   txFree[gpu]                  — NIC 带宽
+ *   fabLeafFree[srcLeaf]         — srcLeaf fabricQ
+ *   leafEgFree[srcLeaf][spine]   — srcLeaf egressQ per uplink (NEW)
+ *   fabSpineFree[spine]          — spine fabricQ
+ *   (dstLeaf 不追踪, BufferGate 4·pktSize 容忍)
+ *
+ * 利用率影响:
+ *   leafEgFree 约束同一 (leaf,spine) 间隔 ≥ dtPort.
+ *   但每 leaf 有 NUM_SPINES 个 uplink port, 轮转使用, 很少连续命中同一 spine.
+ *   预期利用率损失 < 2%.
  */
 
 #pragma once
@@ -45,7 +60,7 @@ public:
     }
 
     // ================================================================
-    //  buildInterleavedDstOrder — 基础交织序列
+    //  buildInterleavedDstOrder
     // ================================================================
     static std::vector<uint32_t> buildInterleavedDstOrder(uint32_t srcGpu) {
         uint32_t srcLeaf = gpuToLeaf(srcGpu);
@@ -92,7 +107,7 @@ public:
     }
 
     // ================================================================
-    //  buildLeafInterleavedSrcOrder — 交织 leaf, 分散 fabricQ 负载
+    //  buildLeafInterleavedSrcOrder
     // ================================================================
     static std::vector<uint32_t> buildLeafInterleavedSrcOrder() {
         std::vector<uint32_t> order;
@@ -104,21 +119,19 @@ public:
     }
 
     // ================================================================
-    //  computePhaseSchedule — v11
+    //  computePhaseSchedule (v13)
     //
-    //  Pipeline 模型 (仿真实际路径):
-    //    GPU send → txQueue(dtPort) → ingressQ(dtPort) → BufferGate → fabricQ(dtFabric)
-    //            → BufferRelease → egressQ(dtPort) → [next switch ingressQ(dtPort)] → ...
+    //  约束 (跨 leaf):
+    //    T ≥ txFree[src]                                        (NIC)
+    //    T ≥ fabLeafFree[srcLeaf] - 2·dtPort                   (srcLeaf fabricQ)
+    //    T ≥ leafEgFree[srcLeaf][spine] - 2·dtPort - dtFabric  (srcLeaf egressQ) ← NEW
+    //    T ≥ fabSpineFree[spine] - 4·dtPort - dtFabric          (spine fabricQ)
     //
-    //  设 T = sendTime:
-    //    srcLeaf fab 开始: T + 2*dtPort
-    //    spine fab 开始:   T + 4*dtPort + dtFabric
-    //    dstLeaf fab 开始: T + 6*dtPort + 2*dtFabric  (不追踪)
-    //
-    //  约束:
-    //    T >= txFree[gpu]                                      (NIC 带宽)
-    //    T >= fabLeafFree[srcLeaf] - 2*dtPort                  (srcLeaf fabricQ)
-    //    T >= fabSpineFree[spine]  - 4*dtPort - dtFabric       (spine fabricQ)
+    //  更新 (跨 leaf):
+    //    txFree[src]                    = T + dtPort
+    //    fabLeafFree[srcLeaf]           = T + 2·dtPort + dtFabric
+    //    leafEgFree[srcLeaf][spine]     = T + 3·dtPort + dtFabric   ← NEW
+    //    fabSpineFree[spine]            = T + 4·dtPort + 2·dtFabric
     // ================================================================
     static std::map<uint32_t, std::vector<ScheduleEntry>>
     computePhaseSchedule(int pktSize, simtime_picosec* outDuration = nullptr) {
@@ -126,25 +139,36 @@ public:
         simtime_picosec dtPort   = (simtime_picosec)pktSize * psPerByteLink();
         simtime_picosec dtFabric = (simtime_picosec)pktSize * psPerByteFabric();
 
-        std::cout << "  Port drain:    " << std::fixed << std::setprecision(1)
+        std::cout << "  === Scheduler v13: pipeline-aware + egressQ tracked ===\n"
+                  << "  Port drain:    " << std::fixed << std::setprecision(1)
                   << (double)dtPort / 1000.0 << " ns\n"
                   << "  Fabric drain:  " << std::setprecision(2)
                   << (double)dtFabric / 1000.0 << " ns  ("
                   << (dtPort / std::max(dtFabric, (simtime_picosec)1)) << "x faster)\n"
-                  << "  Hop pipeline:  " << std::setprecision(1)
-                  << (double)(2 * dtPort) / 1000.0 << " ns  (egressQ + ingressQ)\n";
+                  << "  Pipeline GPU→srcFab:  " << std::setprecision(1)
+                  << (double)(2*dtPort) / 1000.0 << " ns\n"
+                  << "  Pipeline GPU→srcEgQ:  "
+                  << (double)(2*dtPort + dtFabric) / 1000.0 << " ns\n"
+                  << "  Pipeline GPU→spine:   "
+                  << (double)(4*dtPort + dtFabric) / 1000.0 << " ns\n"
+                  << "  ECMP Latin Square: spine = (ps + pd) % "
+                  << NUM_SPINES << "\n";
 
-        // ---- 目标序列 (rotated) & 源序列 ----
+        // ---- 目标序列 & 源序列 ----
         std::cout << "  Building dst/src orders...\n";
         std::vector<std::vector<uint32_t>> dstOrders(NUM_GPU_NODES);
         for (uint32_t s = 0; s < NUM_GPU_NODES; s++)
             dstOrders[s] = buildRotatedDstOrder(s);
         std::vector<uint32_t> srcOrder = buildLeafInterleavedSrcOrder();
 
-        // ---- 资源时间线 ----
-        std::vector<simtime_picosec> txFree(NUM_GPU_NODES, 0);
-        std::vector<simtime_picosec> fabLeafFree(NUM_LEAVES, 0);
-        std::vector<simtime_picosec> fabSpineFree(NUM_SPINES, 0);
+        // ---- 资源时间线 (5 类) ----
+        std::vector<simtime_picosec> txFree(NUM_GPU_NODES, 0);       // NIC 带宽
+        std::vector<simtime_picosec> fabLeafFree(NUM_LEAVES, 0);     // srcLeaf fabricQ
+        std::vector<simtime_picosec> fabSpineFree(NUM_SPINES, 0);    // spine fabricQ
+
+        // NEW: srcLeaf egressQ per uplink port (= per spine)
+        std::vector<std::vector<simtime_picosec>> leafEgFree(
+            NUM_LEAVES, std::vector<simtime_picosec>(NUM_SPINES, 0));
 
         // ---- 输出 ----
         std::map<uint32_t, std::vector<ScheduleEntry>> schedule;
@@ -156,8 +180,7 @@ public:
         uint64_t processed = 0;
         uint64_t reportInterval = std::max(totalEntries / 20, (uint64_t)1);
 
-        std::cout << "  Scheduling " << totalEntries
-                  << " entries (v11: pipeline + txQ + srcLeaf + spine)...\n";
+        std::cout << "  Scheduling " << totalEntries << " entries...\n";
 
         uint32_t numDsts = NUM_GPU_NODES - 1;
 
@@ -169,50 +192,53 @@ public:
                     uint32_t srcLeaf = gpuToLeaf(src);
                     uint32_t dstLeaf = gpuToLeaf(dst);
 
-                    // 计算 sendTime = max(所有约束)
-                    int64_t cTx       = (int64_t)txFree[src];
-                    int64_t cSrcLeaf  = (int64_t)fabLeafFree[srcLeaf] - 2 * (int64_t)dtPort;
-                    int64_t sendTime64;
+                    int64_t c_tx   = (int64_t)txFree[src];
+                    int64_t c_leaf = (int64_t)fabLeafFree[srcLeaf] - 2 * (int64_t)dtPort;
+
+                    simtime_picosec sendTime;
 
                     if (srcLeaf == dstLeaf) {
-                        // 同 Leaf: 只约束 txQ + srcLeaf fabricQ
-                        sendTime64 = std::max({cTx, cSrcLeaf, (int64_t)0});
+                        // 同 leaf: txQ + srcLeaf fabricQ (egressQ 不经 uplink)
+                        int64_t best = std::max({c_tx, c_leaf, (int64_t)0});
+                        sendTime = (simtime_picosec)best;
+
+                        txFree[src]           = sendTime + dtPort;
+                        fabLeafFree[srcLeaf]  = sendTime + 2 * dtPort + dtFabric;
+
+                        simtime_picosec finish = sendTime + 4 * dtPort + dtFabric;
+                        if (finish > maxFinish) maxFinish = finish;
+
                     } else {
-                        // 跨 Leaf: 额外约束 spine fabricQ (反向传播)
+                        // 跨 leaf: 额外约束 spine + srcLeaf egressQ
                         uint32_t spine = spineSelectECMP(src, dst);
-                        int64_t cSpine = (int64_t)fabSpineFree[spine]
-                                       - 4 * (int64_t)dtPort - (int64_t)dtFabric;
-                        sendTime64 = std::max({cTx, cSrcLeaf, cSpine, (int64_t)0});
 
-                        // 更新 spine fabricQ
-                        simtime_picosec spineFabStart =
-                            (simtime_picosec)sendTime64 + 4 * dtPort + dtFabric;
-                        fabSpineFree[spine] = spineFabStart + dtFabric;
+                        int64_t c_spine = (int64_t)fabSpineFree[spine]
+                                        - 4 * (int64_t)dtPort - (int64_t)dtFabric;
+
+                        // NEW: srcLeaf egressQ constraint
+                        // 包到达 egressQ 的时间 = T + 2·dtPort + dtFabric
+                        // egressQ 必须空闲: T + 2·dtPort + dtFabric ≥ leafEgFree
+                        int64_t c_eg = (int64_t)leafEgFree[srcLeaf][spine]
+                                     - 2 * (int64_t)dtPort - (int64_t)dtFabric;
+
+                        int64_t best = std::max({c_tx, c_leaf, c_spine, c_eg, (int64_t)0});
+                        sendTime = (simtime_picosec)best;
+
+                        txFree[src]           = sendTime + dtPort;
+                        fabLeafFree[srcLeaf]  = sendTime + 2 * dtPort + dtFabric;
+                        fabSpineFree[spine]   = sendTime + 4 * dtPort + 2 * dtFabric;
+
+                        // NEW: egressQ free after draining this packet
+                        // egressQ starts at T + 2·dtPort + dtFabric, takes dtPort
+                        leafEgFree[srcLeaf][spine] = sendTime + 3 * dtPort + dtFabric;
+
+                        simtime_picosec finish = sendTime + 8 * dtPort + 3 * dtFabric;
+                        if (finish > maxFinish) maxFinish = finish;
                     }
-
-                    simtime_picosec sendTime = (simtime_picosec)sendTime64;
-
-                    // 更新 txQ 和 srcLeaf fabricQ
-                    txFree[src] = sendTime + dtPort;
-                    simtime_picosec srcFabStart = sendTime + 2 * dtPort;
-                    fabLeafFree[srcLeaf] = srcFabStart + dtFabric;
-
-                    // 最后一个 fabricQ 完成时间
-                    simtime_picosec lastFabFinish;
-                    if (srcLeaf == dstLeaf) {
-                        lastFabFinish = srcFabStart + dtFabric;
-                    } else {
-                        // dstLeaf fab finish = sendTime + 6*dtPort + 3*dtFabric
-                        lastFabFinish = sendTime + 6 * dtPort + 3 * dtFabric;
-                    }
-                    // 加上最后的 egressQ + rxQ 管道延迟
-                    simtime_picosec finish = lastFabFinish + 2 * dtPort;
-                    if (finish > maxFinish) maxFinish = finish;
 
                     schedule[src].push_back({sendTime, (uint16_t)dst, (uint16_t)frag});
 
-                    processed++;
-                    if (processed % reportInterval == 0) {
+                    if (++processed % reportInterval == 0) {
                         std::cout << "  Schedule: "
                                   << (100 * processed / totalEntries) << "%\r"
                                   << std::flush;
@@ -232,41 +258,49 @@ public:
         if (outDuration) *outDuration = maxFinish;
 
         // ---- 利用率分析 ----
-        // 每 GPU txQ 理论工作量
         simtime_picosec txTheoretical =
             (simtime_picosec)(NUM_GPU_NODES - 1) * TOTAL_FRAGMENTS * dtPort;
 
-        // 每 Leaf fabricQ 理论工作量 (local + outgoing + incoming)
         uint64_t fabLeafPkts = (uint64_t)GPUS_PER_LEAF * (GPUS_PER_LEAF - 1) * TOTAL_FRAGMENTS
                              + 2 * (uint64_t)GPUS_PER_LEAF * (NUM_GPU_NODES - GPUS_PER_LEAF) * TOTAL_FRAGMENTS;
         simtime_picosec fabLeafTheoretical = (simtime_picosec)fabLeafPkts * dtFabric;
 
-        // 每 Spine fabricQ 理论工作量
         uint64_t totalCrossLeafPkts = (uint64_t)NUM_GPU_NODES * (NUM_GPU_NODES - GPUS_PER_LEAF) * TOTAL_FRAGMENTS;
         simtime_picosec fabSpineTheoretical = (simtime_picosec)(totalCrossLeafPkts / NUM_SPINES) * dtFabric;
 
-        simtime_picosec bound = std::max({txTheoretical, fabLeafTheoretical, fabSpineTheoretical});
+        // leafEgQ theoretical: per (leaf, spine), packets = GPUS_PER_LEAF * (NUM_LEAVES-1) * TOTAL_FRAGMENTS
+        // each takes dtPort → leafEgQ_theoretical = that * dtPort
+        uint64_t leafEgPktsPerPair = (uint64_t)GPUS_PER_LEAF * (NUM_LEAVES - 1) * TOTAL_FRAGMENTS;
+        simtime_picosec leafEgTheoretical = (simtime_picosec)leafEgPktsPerPair * dtPort;
 
-        // 找瓶颈
-        simtime_picosec maxTx = 0, maxLeaf = 0, maxSpine = 0;
+        simtime_picosec bound = std::max({txTheoretical, fabLeafTheoretical,
+                                          fabSpineTheoretical, leafEgTheoretical});
+
+        // 实际瓶颈
+        simtime_picosec maxTx = 0, maxLeaf = 0, maxSpine = 0, maxEg = 0;
         for (uint32_t i = 0; i < NUM_GPU_NODES; i++)
             if (txFree[i] > maxTx) maxTx = txFree[i];
-        for (uint32_t i = 0; i < NUM_LEAVES; i++)
+        for (uint32_t i = 0; i < NUM_LEAVES; i++) {
             if (fabLeafFree[i] > maxLeaf) maxLeaf = fabLeafFree[i];
+            for (uint32_t s = 0; s < NUM_SPINES; s++)
+                if (leafEgFree[i][s] > maxEg) maxEg = leafEgFree[i][s];
+        }
         for (uint32_t i = 0; i < NUM_SPINES; i++)
             if (fabSpineFree[i] > maxSpine) maxSpine = fabSpineFree[i];
 
+        simtime_picosec maxRes = std::max({maxTx, maxLeaf, maxSpine, maxEg});
         std::string bottleneck;
-        simtime_picosec maxRes = std::max({maxTx, maxLeaf, maxSpine});
         if (maxRes == maxTx)         bottleneck = "txQ (NIC bandwidth)";
         else if (maxRes == maxLeaf)  bottleneck = "fabricQ(Leaf)";
-        else                          bottleneck = "fabricQ(Spine)";
+        else if (maxRes == maxSpine) bottleneck = "fabricQ(Spine)";
+        else                          bottleneck = "egressQ(Leaf→Spine)";
 
-        std::cout << "\n  === Utilization Analysis (v11) ===\n"
+        std::cout << "\n  === Utilization Analysis (v13) ===\n"
                   << "  txQ theoretical:     " << std::fixed << std::setprecision(3)
                   << (double)txTheoretical / 1e9 << " ms\n"
                   << "  fabQ(Leaf) theory:   " << (double)fabLeafTheoretical / 1e9 << " ms\n"
                   << "  fabQ(Spine) theory:  " << (double)fabSpineTheoretical / 1e9 << " ms\n"
+                  << "  egQ(Leaf) theory:    " << (double)leafEgTheoretical / 1e9 << " ms (per leaf-spine pair)\n"
                   << "  Lower bound:         " << (double)bound / 1e9 << " ms\n"
                   << "  Actual (max res):    " << (double)maxRes / 1e9 << " ms\n"
                   << "  Actual (last pkt):   " << (double)maxFinish / 1e9 << " ms\n"
@@ -275,7 +309,8 @@ public:
                   << "  Bottleneck:          " << bottleneck << "\n"
                   << "  Max txQ:             " << (double)maxTx / 1e9 << " ms\n"
                   << "  Max fabQ(Leaf):      " << (double)maxLeaf / 1e9 << " ms\n"
-                  << "  Max fabQ(Spine):     " << (double)maxSpine / 1e9 << " ms\n";
+                  << "  Max fabQ(Spine):     " << (double)maxSpine / 1e9 << " ms\n"
+                  << "  Max egQ(Leaf):       " << (double)maxEg / 1e9 << " ms\n";
 
         return schedule;
     }

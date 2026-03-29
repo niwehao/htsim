@@ -72,7 +72,7 @@ static constexpr uint32_t PAYLOAD_BYTES_PER_TARGET =
 static constexpr uint32_t FRAGMENT_PAYLOAD_SIZE = 4 * 1024;           // 4 KB
 static constexpr uint32_t TOTAL_FRAGMENTS      =
     PAYLOAD_BYTES_PER_TARGET / FRAGMENT_PAYLOAD_SIZE;                  // 2048
-static constexpr uint32_t TOTAL_LAYERS         = 8;
+static constexpr uint32_t TOTAL_LAYERS         = 2;
 
 // 数据包字节数
 static constexpr int DATA_PKT_SIZE = 14 + 15 + (int)FRAGMENT_PAYLOAD_SIZE;

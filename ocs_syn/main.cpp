@@ -1,9 +1,10 @@
 /*
- * main.cpp  —  Scalable OCS + BFS multi-hop routing (max 5 hops)
+ * main.cpp  —  OCS Synchronized Scheduling Simulation
  *
  * N GPUs connected via 1 OCS switch, N-1 time slots per cycle.
- * Each phase: GPU sends to NUM_ACTIVE_EXPERTS targets (MoE top-K).
- * Route: [EcsBuffer@src, rxQ_dst, AppSink_dst]
+ * All-to-all communication with pre-computed optimal send times.
+ * GPU scheduler assigns each flow to its direct connection slot.
+ * EcsBuffer handles actual packet routing via BFS.
  */
 
 #include "gpu_node.h"
@@ -27,10 +28,9 @@ int main() {
 
     EventList::setEndtime(timeFromSec(10000));
 
-    std::cout << "=== MOE Scalable Simulation (OCS + BFS " << DynOcsTopology::MAX_HOPS << "-hop) ===\n"
+    std::cout << "=== OCS Synchronized Scheduling Simulation ===\n"
               << "  GPUs=" << N
-              << " Experts=" << N
-              << " ActiveExperts=" << NUM_ACTIVE_EXPERTS
+              << " All-to-all (" << NUM_ACTIVE_EXPERTS << " targets/GPU)"
               << " Layers=" << TOTAL_LAYERS
               << " Frags=" << TOTAL_FRAGMENTS << "x" << (FRAGMENT_PAYLOAD_SIZE/1024) << "KB"
               << " Link=" << PROT_RATE_Gbps << "Gbps\n"
@@ -42,7 +42,7 @@ int main() {
               << " (" << (double)CYCLE_PS / 1e9 << "ms)"
               << " Timeout=" << timeAsMs(TIMEOUT_PS) << "ms\n\n";
 
-    // ---- Generate schedule (Circle Method) ----
+    // ---- Generate OCS schedule (Circle Method) ----
     HohooSchedule sched = computeHohooSchedule(N);
     printHohooSchedule(sched);
 
@@ -62,9 +62,14 @@ int main() {
               << " (" << (double)topo->cycle_time() / 1e9 << " ms)\n\n";
 
     topo->printRoutingTable();
-    std::cout << std::flush;
 
+    // ---- Compute GPU flow schedule (all-to-all direct) ----
     auto t2 = std::chrono::steady_clock::now();
+    auto flowSchedules = computeGlobalFlowSchedule(topo, (int)TOTAL_LAYERS);
+    auto t3 = std::chrono::steady_clock::now();
+    std::cout << "[TIMER] Flow scheduling: "
+              << std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count()
+              << " ms\n";
 
     // ---- Create OCS switch ----
     OcsSwitch* ocs = new OcsSwitch(topo);
@@ -72,7 +77,7 @@ int main() {
     // ---- Create N GpuNodes ----
     std::vector<GpuNode*> gpus(N);
     for (int i = 0; i < N; i++)
-        gpus[i] = new GpuNode((uint16_t)(i + 1));
+        gpus[i] = new GpuNode((uint16_t)(i + 1), topo);
 
     // ---- Create PacketFlows ----
     std::vector<PacketFlow*> flows(N);
@@ -92,8 +97,8 @@ int main() {
         }
     }
 
-    // ---- Pre-compute phase assignments (MoE target selection) ----
-    std::cout << "Pre-computing MoE target assignments ("
+    // ---- Pre-compute phase assignments (all-to-all) ----
+    std::cout << "Setting up all-to-all phase assignments ("
               << TOTAL_LAYERS << " layers x 2 phases x " << N << " GPUs x "
               << NUM_ACTIVE_EXPERTS << " targets)...\n";
 
@@ -108,27 +113,22 @@ int main() {
         }
     }
 
-    // Print sample assignments
-    std::cout << "Sample MoE assignments (L0 DISPATCH):\n";
-    auto sample = computePhaseAssignments(0, 0);
-    int printLimit = std::min(N, 8);
-    for (int gpu = 1; gpu <= printLimit; gpu++) {
-        std::cout << "  GPU" << gpu << " sends to:";
-        for (auto t : sample[gpu].send_targets) std::cout << " " << t;
-        std::cout << "  | recv from:";
-        for (auto r : sample[gpu].recv_from) std::cout << " " << r;
-        std::cout << "\n";
-    }
-    if (N > 8) std::cout << "  ... (" << N << " GPUs total)\n";
-    std::cout << "\n";
+    // ---- Assign flow schedules to GPUs ----
+    std::cout << "Assigning flow schedules to " << N << " GPUs...\n";
+    for (int i = 0; i < N; i++)
+        gpus[i]->setFlowSchedule(flowSchedules[i]);
 
-    auto t3 = std::chrono::steady_clock::now();
-    std::cout << "[TIMER] Setup (OCS+GPUs+routes+assignments): "
-              << std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count()
-              << " ms\n";
+    std::cout << "\nExpected per-phase time: "
+              << std::fixed << std::setprecision(2)
+              << (double)CYCLE_PS / 1e9 << " ms (1 cycle = "
+              << NUM_SLOTS << " slots)\n"
+              << "Expected total time: ~"
+              << (double)(TOTAL_LAYERS * 2 * CYCLE_PS
+                          + (TOTAL_LAYERS * 2 - 1) * INTERPHASE_GAP_PS) / 1e9
+              << " ms\n\n";
 
     // ---- Run simulation ----
-    std::cout << "Running simulation...\n\n" << std::flush;
+    std::cout << "Running simulation...\n\n";
     while (EventList::doNextEvent()) {}
 
     // ---- Print stats ----

@@ -30,8 +30,15 @@ public:
         }
 
         _bufUsage += sz;
+        //如果大于max,则打印现在的bufUsage,并且更新max
+        if(_bufUsage > _bufMax){
+            _bufMax = _bufUsage;
+            std::cout << "[" << _nodename << "] BUFUSAGE: " << _bufUsage/(ACK_PKT_SIZE+FRAGMENT_PAYLOAD_SIZE) << "个)\n";
+        }
+        pkt.sendOn();
+        return;
         // 同步调度下, 包到达时缓冲应为空 → 直接转发
-        if (_bufUsage <= pkt.size()*16 || pkt.size() == ACK_PKT_SIZE) {
+        if (_bufUsage <= (ACK_PKT_SIZE+FRAGMENT_PAYLOAD_SIZE)*10 || pkt.size() == ACK_PKT_SIZE) {
             pkt.sendOn();
             return;
         }
@@ -74,6 +81,7 @@ private:
     std::deque<Delayed> _delayed;
     int64_t     _bufUsage = 0;
     std::string _nodename;
+    int64_t     _bufMax = 0;
 };
 
 // ================================================================

@@ -36,7 +36,7 @@
 
 static constexpr uint32_t NUM_GPU_NODES         = 128;      // N GPUs (set to 512 for full scale)
 static constexpr uint32_t TOTAL_LAYERS          = 4;       // number of MoE layers
-static constexpr uint32_t NUM_ACTIVE_EXPERTS    = 2;       // MoE top-K experts per token
+static constexpr uint32_t NUM_ACTIVE_EXPERTS    = 64;       // MoE top-K experts per token
 
 static constexpr uint64_t PROT_RATE_Gbps        = 200;
 static constexpr uint32_t OCS_PORT_NUM          = NUM_GPU_NODES;
@@ -54,7 +54,7 @@ static constexpr int DATA_PKT_SIZE = 14 + 15 + (int)FRAGMENT_PAYLOAD_SIZE;
 static constexpr int ACK_PKT_SIZE  = 14 + 15;
 
 // Timing (picoseconds)
-static constexpr simtime_picosec TIMEOUT_PS        = 200ULL * 1000000000ULL; // 200 ms (longer for large N)
+static constexpr simtime_picosec TIMEOUT_PS        = 200ULL * 1000000000ULL;  // 200 ms
 static constexpr simtime_picosec INTERPHASE_GAP_PS =   1ULL * 1000000000ULL; // 1 ms
 
 // OCS reconfiguration delay: 10 us

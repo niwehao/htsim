@@ -30,7 +30,11 @@ public:
         }
 
         _bufUsage += sz;
-        if (_bufUsage <= pkt.size()*16 || pkt.size() == ACK_PKT_SIZE) {
+        // if(_bufUsage > _bufMax){
+        //     _bufMax = _bufUsage;
+        //     std::cout << "[" << _nodename << "] BUFUSAGE: " << _bufUsage/(ACK_PKT_SIZE+FRAGMENT_PAYLOAD_SIZE) << "个)\n";
+        // }
+        if (_bufUsage <= (ACK_PKT_SIZE+FRAGMENT_PAYLOAD_SIZE)*10 || pkt.size() == ACK_PKT_SIZE) {
             pkt.sendOn();
             return;
         }
@@ -67,6 +71,7 @@ private:
     std::deque<Delayed> _delayed;
     int64_t     _bufUsage = 0;
     std::string _nodename;
+    int64_t     _bufMax = 0;
 };
 
 // ================================================================

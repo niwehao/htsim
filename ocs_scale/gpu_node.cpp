@@ -6,6 +6,7 @@
 #include "hoho_routing.h"
 #include <algorithm>
 #include <iostream>
+#include <random>
 
 PacketDB<MoePacket> MoePacket::_db;
 packetid_t          MoePacket::_nextId = 1;
@@ -84,8 +85,9 @@ void GpuNode::startLayerPhase() {
     }
 
     // Send ALL targets in parallel
-    for (uint16_t target : cfg.send_targets) {
-        // Create retx timer if needed
+    std::vector<uint16_t> shuffledTargets(cfg.send_targets.begin(), cfg.send_targets.end());
+    std::shuffle(shuffledTargets.begin(), shuffledTargets.end(), _rng);
+    for (uint16_t target : shuffledTargets) {
         if (_retxTimers.find(target) == _retxTimers.end()) {
             _retxTimers[target] = new TimerEvent(
                 "retx_" + std::to_string(_nodeId) + "_" + std::to_string(target));

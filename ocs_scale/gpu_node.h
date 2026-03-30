@@ -122,4 +122,5 @@ private:
 
     NodeStats _stats;
     static uint32_t s_doneCount;
+    std::mt19937 _rng{std::random_device{}()}; 
 };

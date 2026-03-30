@@ -34,14 +34,14 @@
 // ================================================================
 
 static constexpr uint32_t NUM_GPU_NODES         = 128;
-static constexpr uint32_t TOTAL_LAYERS          = 4;
+static constexpr uint32_t TOTAL_LAYERS          = 2;
 static constexpr uint32_t NUM_ACTIVE_EXPERTS    = NUM_GPU_NODES - 1;  // all-to-all
 
 static constexpr uint64_t PROT_RATE_Gbps        = 200;
 static constexpr uint32_t OCS_PORT_NUM          = NUM_GPU_NODES;
 static constexpr uint32_t HIDDEN_DIM            = 4096;
 static constexpr uint32_t BYTES_PER_ELEM        = 2;
-static constexpr uint32_t TOKENS_PER_TARGET     = 128;
+static constexpr uint32_t TOKENS_PER_TARGET     = 256;
 static constexpr uint32_t PAYLOAD_BYTES_PER_TARGET =
     TOKENS_PER_TARGET * HIDDEN_DIM * BYTES_PER_ELEM;
 static constexpr uint32_t FRAGMENT_PAYLOAD_SIZE = 4 * 1024;
@@ -73,7 +73,7 @@ static constexpr mem_b HUGE_BUFFER = (mem_b)2LL * 1024 * 1024 * 1024;
 // ================================================================
 
 static constexpr simtime_picosec SLOT_TX_TIME_PS =
-    (simtime_picosec)TOTAL_FRAGMENTS * DATA_PKT_SIZE * 8ULL * 1000ULL * 10ULL
+    (simtime_picosec)TOTAL_FRAGMENTS * DATA_PKT_SIZE * 8ULL * 1000ULL * 1.2
     / PROT_RATE_Gbps;
 
 static constexpr simtime_picosec SLICE_ACTIVE_PS =

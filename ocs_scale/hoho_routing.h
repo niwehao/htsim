@@ -74,6 +74,7 @@ public:
                               + "_S" + std::to_string(S)
                               + "_H" + std::to_string(MAX_HOPS) + ".bin";
         if (!loadRoutingTable(cacheFile)) {
+            std::cout << "No cached routing table found. Computing BFS routing...\n";
             computeRoutingTable();
             saveRoutingTable(cacheFile);
         }

@@ -36,7 +36,7 @@ GpuNode::GpuNode(uint16_t nodeId)
 }
 
 void GpuNode::startInference() {
-    if (VERBOSE_LOG) {
+    if (VERBOSE_LOG && _nodeId % PRINT_MOD == 0) {
         std::cout << "[Node " << (int)_nodeId << "] INFERENCE START -- "
                   << TOTAL_LAYERS << " layers\n";
     }
@@ -54,7 +54,7 @@ void GpuNode::startLayerPhase() {
     assert(cfgIt != _phaseConfigs.end() && "Phase config not set");
     const PhaseConfig& cfg = cfgIt->second;
 
-    if (VERBOSE_LOG) {
+    if (VERBOSE_LOG && _nodeId % PRINT_MOD == 0) {
         std::cout << "[Node " << (int)_nodeId << "] L" << layer
                   << " " << phaseName(phase) << " START -> "
                   << cfg.send_targets.size() << " targets, recv from "
@@ -192,7 +192,7 @@ void GpuNode::processDataPacket(MoePacket& pkt, int layer, int phase) {
     if ((int)fragSet.size() < totalFrags) return;
 
     _processedSet.insert(dedup);
-    if (VERBOSE_LOG) {
+    if (VERBOSE_LOG && _nodeId % PRINT_MOD == 0) {
         std::cout << "[Node " << (int)_nodeId << "] COMPLETE from Node "
                   << (int)srcId << " L" << layer << " " << phaseName(phase) << "\n";
     }
@@ -235,7 +235,7 @@ void GpuNode::processAckPacket(MoePacket& pkt, int layer, int phase) {
     tx.doneCount++;
     _stats.recordTaskDone(layer, phase, (int)srcId, ps.attempts);
 
-    if (VERBOSE_LOG) {
+    if (VERBOSE_LOG && _nodeId % PRINT_MOD == 0) {
         std::cout << "[Node " << (int)_nodeId << "] TX DONE -> Node "
                   << (int)srcId << " L" << layer << " " << phaseName(phase)
                   << " (" << tx.doneCount << "/" << tx.expectedCount << ")\n";
@@ -252,7 +252,7 @@ void GpuNode::checkPhaseComplete(int layer, int phase) {
     if (tx.doneCount < tx.expectedCount || !rx.barrierMet) return;
 
     _phaseFinished.insert(key);
-    if (VERBOSE_LOG) {
+    if (VERBOSE_LOG && _nodeId % PRINT_MOD == 0) {
         std::cout << "[Node " << (int)_nodeId << "] Phase COMPLETE L"
                   << layer << " " << phaseName(phase) << "\n";
     }

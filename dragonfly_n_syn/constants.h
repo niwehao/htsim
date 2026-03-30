@@ -137,7 +137,7 @@ static constexpr int DATA_PKT_SIZE = 14 + 15 + (int)FRAGMENT_PAYLOAD_SIZE;
 static constexpr int ACK_PKT_SIZE  = 14 + 15;
 
 // 定时 (皮秒)
-static constexpr simtime_picosec TIMEOUT_PS        = 10ULL * 1000000000ULL;
+static constexpr simtime_picosec TIMEOUT_PS        = 20ULL * 1000000000ULL;
 static constexpr simtime_picosec INTERPHASE_GAP_PS =  1ULL * 1000000000ULL;
 static constexpr simtime_picosec BUFFER_DELAY_PS   =  2ULL * 1000000000ULL;
 

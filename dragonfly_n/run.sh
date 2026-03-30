@@ -1,7 +1,7 @@
 #!/bin/bash
 mkdir -p log
 
-start=6
+start=0
 end=100
 # 计算总的任务数量 (100 - 6 + 1 = 95)
 total_steps=$((end - start + 1))

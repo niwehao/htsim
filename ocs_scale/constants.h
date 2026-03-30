@@ -35,9 +35,9 @@
 // ================================================================
 
 static constexpr uint32_t NUM_GPU_NODES         = 128;      // N GPUs (set to 512 for full scale)
-static constexpr uint32_t TOTAL_LAYERS          = 4;       // number of MoE layers
+static constexpr uint32_t TOTAL_LAYERS          = 2;       // number of MoE layers
 static constexpr uint32_t NUM_ACTIVE_EXPERTS    = NUM_GPU_NODES - 1;       // MoE top-K experts per token
-
+static constexpr uint32_t PRINT_MOD       = NUM_GPU_NODES/8;//start512 32
 static constexpr uint64_t PROT_RATE_Gbps        = 200;
 static constexpr uint32_t OCS_PORT_NUM          = NUM_GPU_NODES;
 static constexpr uint32_t HIDDEN_DIM            = 4096;
@@ -97,7 +97,7 @@ static constexpr mem_b OCS_TX_BUFFER = 256LL * 1024 * 1024;
 static constexpr simtime_picosec OCS_LINK_DELAY_PS = 100ULL * 1000ULL;
 
 // Verbose logging (disable for large N)
-static constexpr bool VERBOSE_LOG = (NUM_GPU_NODES <= 16);
+static constexpr bool VERBOSE_LOG = 1;
 
 // ================================================================
 //  S3  MoE target selection

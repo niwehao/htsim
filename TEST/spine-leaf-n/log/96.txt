@@ -1,0 +1,601 @@
+./moe_sim_512.bin
+=== MOE htsim Simulation — 2-Level Leaf-Spine ===
+  GPUs=128 Leaves=16 Spines=8 PortsPerSwitch=16
+  Layers=4 Frags=512x4KB Link=200Gbps Timeout=20ms
+
+  Created 16 Leaf switches
+  Created 8 Spine switches
+  Created 128 GPU nodes
+
+  Computing routes for 128 x 127 = 16256 pairs...
+  Routes: 896 intra-leaf (7 hops), 15360 inter-leaf (17 hops)
+
+Topology:
+  L0[GPU0-7]  L1[GPU8-15]  L2[GPU16-23]  L3[GPU24-31]  L4[GPU32-39]  L5[GPU40-47]  L6[GPU48-55]  L7[GPU56-63]
+  L8[GPU64-71]  L9[GPU72-79]  L10[GPU80-87]  L11[GPU88-95]  L12[GPU96-103]  L13[GPU104-111]  L14[GPU112-119]  L15[GPU120-127]
+  Spine0..Spine7 (each connects all 16 Leaves)
+
+ECMP distribution (cross-leaf flows per spine):
+  S0=1920 S1=1920 S2=1920 S3=1920 S4=1920 S5=1920 S6=1920 S7=1920 
+
+Running simulation...
+
+[Node 1] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 2] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 3] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 5] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 6] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 7] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 9] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 10] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 11] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 13] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 14] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 15] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 17] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 18] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 19] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 21] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 22] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 23] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 25] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 26] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 27] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 29] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 30] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 31] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 33] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 34] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 35] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 37] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 38] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 39] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 41] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 42] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 43] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 45] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 46] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 47] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 49] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 50] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 51] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 53] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 54] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 55] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 57] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 58] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 59] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 61] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 62] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 63] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 65] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 66] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 67] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 69] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 70] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 71] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 73] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 74] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 75] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 77] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 78] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 79] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 81] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 82] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 83] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 85] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 86] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 87] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 89] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 90] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 91] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 93] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 94] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 95] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 97] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 98] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 99] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 101] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 102] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 103] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 105] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 106] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 107] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 109] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 110] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 111] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 113] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 114] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 115] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 117] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 118] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 119] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 121] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 122] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 123] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 125] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 126] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 127] INFERENCE START — 4 layers, 512 frags/target, 127 peers
+[Node 96] COMPLETE from Node 108 L0 DISPATCH
+[Node 52] COMPLETE from Node 68 L0 DISPATCH
+[Node 88] COMPLETE from Node 104 L0 DISPATCH
+[Node 20] COMPLETE from Node 32 L0 DISPATCH
+[Node 100] COMPLETE from Node 16 L0 DISPATCH
+[Node 36] COMPLETE from Node 4 L0 DISPATCH
+[Node 72] COMPLETE from Node 12 L0 DISPATCH
+[Node 20] COMPLETE from Node 116 L0 DISPATCH
+[Node 76] COMPLETE from Node 40 L0 DISPATCH
+[Node 76] COMPLETE from Node 112 L0 DISPATCH
+[Node 12] COMPLETE from Node 72 L0 DISPATCH
+[Node 48] COMPLETE from Node 8 L0 DISPATCH
+[Node 84] COMPLETE from Node 80 L0 DISPATCH
+[Node 80] COMPLETE from Node 4 L0 DISPATCH
+[Node 100] COMPLETE from Node 44 L0 DISPATCH
+[Node 56] COMPLETE from Node 72 L0 DISPATCH
+[Node 92] COMPLETE from Node 36 L0 DISPATCH
+[Node 64] COMPLETE from Node 4 L0 DISPATCH
+[Node 0] COMPLETE from Node 104 L0 DISPATCH
+[Node 40] COMPLETE from Node 120 L0 DISPATCH
+[Node 20] COMPLETE from Node 88 L0 DISPATCH
+[Node 56] COMPLETE from Node 68 L0 DISPATCH
+[Node 60] COMPLETE from Node 92 L0 DISPATCH
+[Node 112] COMPLETE from Node 60 L0 DISPATCH
+[Node 52] COMPLETE from Node 56 L0 DISPATCH
+[Node 44] COMPLETE from Node 20 L0 DISPATCH
+[Node 32] COMPLETE from Node 124 L0 DISPATCH
+[Node 116] COMPLETE from Node 16 L0 DISPATCH
+[Node 4] COMPLETE from Node 84 L0 DISPATCH
+[Node 108] COMPLETE from Node 64 L0 DISPATCH
+[Node 80] COMPLETE from Node 24 L0 DISPATCH
+[Node 24] COMPLETE from Node 96 L0 DISPATCH
+[Node 20] COMPLETE from Node 16 L0 DISPATCH
+[Node 0] COMPLETE from Node 72 L0 DISPATCH
+[Node 96] COMPLETE from Node 16 L0 DISPATCH
+[Node 88] COMPLETE from Node 64 L0 DISPATCH
+[Node 64] COMPLETE from Node 8 L0 DISPATCH
+[Node 112] COMPLETE from Node 20 L0 DISPATCH
+[Node 40] COMPLETE from Node 72 L0 DISPATCH
+[Node 36] COMPLETE from Node 124 L0 DISPATCH
+[Node 16] COMPLETE from Node 124 L0 DISPATCH
+[Node 124] COMPLETE from Node 32 L0 DISPATCH
+[Node 48] COMPLETE from Node 24 L0 DISPATCH
+[Node 28] COMPLETE from Node 0 L0 DISPATCH
+[Node 104] COMPLETE from Node 100 L0 DISPATCH
+[Node 96] COMPLETE from Node 76 L0 DISPATCH
+[Node 100] COMPLETE from Node 120 L0 DISPATCH
+[Node 76] COMPLETE from Node 68 L0 DISPATCH
+[Node 52] COMPLETE from Node 48 L0 DISPATCH
+[Node 88] COMPLETE from Node 52 L0 DISPATCH
+[Node 48] COMPLETE from Node 56 L0 DISPATCH
+[Node 84] COMPLETE from Node 4 L0 DISPATCH
+[Node 96] COMPLETE from Node 4 L0 DISPATCH
+[Node 112] COMPLETE from Node 40 L0 DISPATCH
+[Node 88] COMPLETE from Node 112 L0 DISPATCH
+[Node 116] COMPLETE from Node 112 L0 DISPATCH
+[Node 64] COMPLETE from Node 68 L0 DISPATCH
+[Node 28] COMPLETE from Node 84 L0 DISPATCH
+[Node 76] COMPLETE from Node 108 L0 DISPATCH
+[Node 48] COMPLETE from Node 116 L0 DISPATCH
+[Node 12] COMPLETE from Node 60 L0 DISPATCH
+[Node 68] COMPLETE from Node 28 L0 DISPATCH
+[Node 24] COMPLETE from Node 4 L0 DISPATCH
+[Node 100] COMPLETE from Node 32 L0 DISPATCH
+[Node 108] COMPLETE from Node 52 L0 DISPATCH
+[Node 88] COMPLETE from Node 116 L0 DISPATCH
+[Node 68] COMPLETE from Node 104 L0 DISPATCH
+[Node 28] COMPLETE from Node 72 L0 DISPATCH
+[Node 72] COMPLETE from Node 52 L0 DISPATCH
+[Node 40] COMPLETE from Node 44 L0 DISPATCH
+[Node 104] COMPLETE from Node 68 L0 DISPATCH
+[Node 88] COMPLETE from Node 96 L0 DISPATCH
+[Node 8] COMPLETE from Node 52 L0 DISPATCH
+[Node 84] COMPLETE from Node 20 L0 DISPATCH
+[Node 96] COMPLETE from Node 124 L0 DISPATCH
+[Node 32] COMPLETE from Node 36 L0 DISPATCH
+[Node 36] COMPLETE from Node 104 L0 DISPATCH
+[Node 96] COMPLETE from Node 40 L0 DISPATCH
+[Node 64] COMPLETE from Node 20 L0 DISPATCH
+[Node 72] COMPLETE from Node 0 L0 DISPATCH
+[Node 4] COMPLETE from Node 124 L0 DISPATCH
+[Node 116] COMPLETE from Node 0 L0 DISPATCH
+[Node 80] COMPLETE from Node 72 L0 DISPATCH
+[Node 32] COMPLETE from Node 52 L0 DISPATCH
+[Node 32] COMPLETE from Node 28 L0 DISPATCH
+[Node 64] COMPLETE from Node 72 L0 DISPATCH
+[Node 84] COMPLETE from Node 36 L0 DISPATCH
+[Node 88] COMPLETE from Node 32 L0 DISPATCH
+[Node 88] COMPLETE from Node 8 L0 DISPATCH
+[Node 56] COMPLETE from Node 100 L0 DISPATCH
+[Node 48] COMPLETE from Node 68 L0 DISPATCH
+[Node 80] COMPLETE from Node 100 L0 DISPATCH
+[Node 60] COMPLETE from Node 36 L0 DISPATCH
+[Node 40] COMPLETE from Node 56 L0 DISPATCH
+[Node 108] COMPLETE from Node 20 L0 DISPATCH
+[Node 4] COMPLETE from Node 56 L0 DISPATCH
+[Node 4] COMPLETE from Node 32 L0 DISPATCH
+[Node 12] COMPLETE from Node 120 L0 DISPATCH
+[Node 64] COMPLETE from Node 88 L0 DISPATCH
+[Node 52] COMPLETE from Node 40 L0 DISPATCH
+[Node 24] COMPLETE from Node 68 L0 DISPATCH
+[Node 52] COMPLETE from Node 36 L0 DISPATCH
+[Node 80] COMPLETE from Node 112 L0 DISPATCH
+[Node 40] COMPLETE from Node 28 L0 DISPATCH
+[Node 88] COMPLETE from Node 12 L0 DISPATCH
+[Node 16] COMPLETE from Node 116 L0 DISPATCH
+[Node 104] COMPLETE from Node 20 L0 DISPATCH
+[Node 48] COMPLETE from Node 36 L0 DISPATCH
+[Node 64] COMPLETE from Node 24 L0 DISPATCH
+[Node 28] COMPLETE from Node 52 L0 DISPATCH
+[Node 124] COMPLETE from Node 120 L0 DISPATCH
+[Node 36] COMPLETE from Node 56 L0 DISPATCH
+[Node 88] COMPLETE from Node 48 L0 DISPATCH
+[Node 100] COMPLETE from Node 112 L0 DISPATCH
+[Node 80] COMPLETE from Node 28 L0 DISPATCH
+[Node 20] COMPLETE from Node 8 L0 DISPATCH
+[Node 16] COMPLETE from Node 60 L0 DISPATCH
+[Node 60] COMPLETE from Node 8 L0 DISPATCH
+[Node 76] COMPLETE from Node 0 L0 DISPATCH
+[Node 48] COMPLETE from Node 104 L0 DISPATCH
+[Node 72] COMPLETE from Node 104 L0 DISPATCH
+[Node 44] COMPLETE from Node 52 L0 DISPATCH
+[Node 44] COMPLETE from Node 100 L0 DISPATCH
+[Node 52] COMPLETE from Node 0 L0 DISPATCH
+[Node 108] COMPLETE from Node 120 L0 DISPATCH
+[Node 20] COMPLETE from Node 24 L0 DISPATCH
+[Node 8] COMPLETE from Node 76 L0 DISPATCH
+[Node 8] COMPLETE from Node 16 L0 DISPATCH
+[Node 84] COMPLETE from Node 12 L0 DISPATCH
+[Node 24] COMPLETE from Node 28 L0 DISPATCH
+[Node 116] COMPLETE from Node 64 L0 DISPATCH
+[Node 48] COMPLETE from Node 120 L0 DISPATCH
+[Node 36] COMPLETE from Node 108 L0 DISPATCH
+[Node 12] COMPLETE from Node 32 L0 DISPATCH
+[Node 40] COMPLETE from Node 16 L0 DISPATCH
+[Node 100] COMPLETE from Node 96 L0 DISPATCH
+[Node 44] COMPLETE from Node 48 L0 DISPATCH
+[Node 112] COMPLETE from Node 0 L0 DISPATCH
+[Node 112] COMPLETE from Node 92 L0 DISPATCH
+[Node 108] COMPLETE from Node 0 L0 DISPATCH
+[Node 72] COMPLETE from Node 68 L0 DISPATCH
+[Node 96] COMPLETE from Node 12 L0 DISPATCH
+[Node 104] COMPLETE from Node 52 L0 DISPATCH
+[Node 44] COMPLETE from Node 60 L0 DISPATCH
+[Node 32] COMPLETE from Node 88 L0 DISPATCH
+[Node 0] COMPLETE from Node 108 L0 DISPATCH
+[Node 80] COMPLETE from Node 44 L0 DISPATCH
+[Node 12] COMPLETE from Node 4 L0 DISPATCH
+[Node 92] COMPLETE from Node 72 L0 DISPATCH
+[Node 24] COMPLETE from Node 16 L0 DISPATCH
+[Node 4] COMPLETE from Node 68 L0 DISPATCH
+[Node 68] COMPLETE from Node 100 L0 DISPATCH
+[Node 60] COMPLETE from Node 48 L0 DISPATCH
+[Node 104] COMPLETE from Node 56 L0 DISPATCH
+[Node 24] COMPLETE from Node 104 L0 DISPATCH
+[Node 120] COMPLETE from Node 20 L0 DISPATCH
+[Node 124] COMPLETE from Node 8 L0 DISPATCH
+[Node 96] COMPLETE from Node 56 L0 DISPATCH
+[Node 96] COMPLETE from Node 44 L0 DISPATCH
+[Node 44] COMPLETE from Node 84 L0 DISPATCH
+[Node 92] COMPLETE from Node 120 L0 DISPATCH
+[Node 44] COMPLETE from Node 112 L0 DISPATCH
+[Node 12] COMPLETE from Node 0 L0 DISPATCH
+[Node 72] COMPLETE from Node 64 L0 DISPATCH
+[Node 116] COMPLETE from Node 104 L0 DISPATCH
+[Node 76] COMPLETE from Node 36 L0 DISPATCH
+[Node 88] COMPLETE from Node 108 L0 DISPATCH
+[Node 80] COMPLETE from Node 12 L0 DISPATCH
+[Node 96] COMPLETE from Node 92 L0 DISPATCH
+[Node 56] COMPLETE from Node 8 L0 DISPATCH
+[Node 40] COMPLETE from Node 108 L0 DISPATCH
+[Node 8] COMPLETE from Node 24 L0 DISPATCH
+[Node 8] COMPLETE from Node 48 L0 DISPATCH
+[Node 112] COMPLETE from Node 108 L0 DISPATCH
+[Node 0] COMPLETE from Node 8 L0 DISPATCH
+[Node 60] COMPLETE from Node 4 L0 DISPATCH
+[Node 124] COMPLETE from Node 96 L0 DISPATCH
+[Node 108] COMPLETE from Node 44 L0 DISPATCH
+[Node 52] COMPLETE from Node 120 L0 DISPATCH
+[Node 16] COMPLETE from Node 12 L0 DISPATCH
+[Node 12] COMPLETE from Node 56 L0 DISPATCH
+[Node 40] COMPLETE from Node 4 L0 DISPATCH
+[Node 52] COMPLETE from Node 60 L0 DISPATCH
+[Node 120] COMPLETE from Node 40 L0 DISPATCH
+[Node 112] COMPLETE from Node 56 L0 DISPATCH
+[Node 48] COMPLETE from Node 4 L0 DISPATCH
+[Node 108] COMPLETE from Node 36 L0 DISPATCH
+[Node 20] COMPLETE from Node 28 L0 DISPATCH
+[Node 48] COMPLETE from Node 72 L0 DISPATCH
+[Node 96] COMPLETE from Node 48 L0 DISPATCH
+[Node 0] COMPLETE from Node 88 L0 DISPATCH
+[Node 120] COMPLETE from Node 116 L0 DISPATCH
+[Node 4] COMPLETE from Node 24 L0 DISPATCH
+[Node 20] COMPLETE from Node 72 L0 DISPATCH
+[Node 100] COMPLETE from Node 52 L0 DISPATCH
+[Node 56] COMPLETE from Node 48 L0 DISPATCH
+[Node 40] COMPLETE from Node 88 L0 DISPATCH
+[Node 100] COMPLETE from Node 24 L0 DISPATCH
+[Node 8] COMPLETE from Node 116 L0 DISPATCH
+[Node 64] COMPLETE from Node 44 L0 DISPATCH
+[Node 92] COMPLETE from Node 40 L0 DISPATCH
+[Node 96] COMPLETE from Node 28 L0 DISPATCH
+[Node 0] COMPLETE from Node 24 L0 DISPATCH
+[Node 24] COMPLETE from Node 116 L0 DISPATCH
+[Node 64] COMPLETE from Node 112 L0 DISPATCH
+[Node 16] COMPLETE from Node 96 L0 DISPATCH
+[Node 92] COMPLETE from Node 20 L0 DISPATCH
+[Node 124] COMPLETE from Node 16 L0 DISPATCH
+[Node 44] COMPLETE from Node 8 L0 DISPATCH
+[Node 36] COMPLETE from Node 120 L0 DISPATCH
+[Node 120] COMPLETE from Node 108 L0 DISPATCH
+[Node 16] COMPLETE from Node 0 L0 DISPATCH
+[Node 16] COMPLETE from Node 40 L0 DISPATCH
+[Node 52] COMPLETE from Node 8 L0 DISPATCH
+[Node 68] COMPLETE from Node 48 L0 DISPATCH
+[Node 0] COMPLETE from Node 32 L0 DISPATCH
+[Node 20] COMPLETE from Node 80 L0 DISPATCH
+[Node 56] COMPLETE from Node 32 L0 DISPATCH
+[Node 56] COMPLETE from Node 80 L0 DISPATCH
+[Node 48] COMPLETE from Node 96 L0 DISPATCH
+[Node 64] COMPLETE from Node 100 L0 DISPATCH
+[Node 52] COMPLETE from Node 12 L0 DISPATCH
+[Node 28] COMPLETE from Node 64 L0 DISPATCH
+[Node 124] COMPLETE from Node 108 L0 DISPATCH
+[Node 8] COMPLETE from Node 28 L0 DISPATCH
+[Node 36] COMPLETE from Node 16 L0 DISPATCH
+[Node 60] COMPLETE from Node 16 L0 DISPATCH
+[Node 100] COMPLETE from Node 84 L0 DISPATCH
+[Node 112] COMPLETE from Node 44 L0 DISPATCH
+[Node 36] COMPLETE from Node 92 L0 DISPATCH
+[Node 72] COMPLETE from Node 96 L0 DISPATCH
+[Node 116] COMPLETE from Node 4 L0 DISPATCH
+[Node 0] COMPLETE from Node 100 L0 DISPATCH
+[Node 20] COMPLETE from Node 4 L0 DISPATCH
+[Node 44] COMPLETE from Node 16 L0 DISPATCH
+[Node 76] COMPLETE from Node 20 L0 DISPATCH
+[Node 12] COMPLETE from Node 108 L0 DISPATCH
+[Node 104] COMPLETE from Node 4 L0 DISPATCH
+[Node 96] COMPLETE from Node 60 L0 DISPATCH
+[Node 116] COMPLETE from Node 100 L0 DISPATCH
+[Node 60] COMPLETE from Node 100 L0 DISPATCH
+[Node 80] COMPLETE from Node 36 L0 DISPATCH
+[Node 92] COMPLETE from Node 52 L0 DISPATCH
+[Node 84] COMPLETE from Node 108 L0 DISPATCH
+[Node 28] COMPLETE from Node 112 L0 DISPATCH
+[Node 80] COMPLETE from Node 96 L0 DISPATCH
+[Node 124] COMPLETE from Node 64 L0 DISPATCH
+[Node 124] COMPLETE from Node 76 L0 DISPATCH
+[Node 116] COMPLETE from Node 44 L0 DISPATCH
+[Node 4] COMPLETE from Node 104 L0 DISPATCH
+[Node 72] COMPLETE from Node 116 L0 DISPATCH
+[Node 28] COMPLETE from Node 24 L0 DISPATCH
+[Node 28] COMPLETE from Node 92 L0 DISPATCH
+[Node 88] COMPLETE from Node 92 L0 DISPATCH
+[Node 12] COMPLETE from Node 28 L0 DISPATCH
+[Node 76] COMPLETE from Node 92 L0 DISPATCH
+[Node 12] COMPLETE from Node 16 L0 DISPATCH
+[Node 124] COMPLETE from Node 12 L0 DISPATCH
+[Node 40] COMPLETE from Node 92 L0 DISPATCH
+[Node 20] COMPLETE from Node 120 L0 DISPATCH
+[Node 20] COMPLETE from Node 64 L0 DISPATCH
+[Node 52] COMPLETE from Node 72 L0 DISPATCH
+[Node 112] COMPLETE from Node 84 L0 DISPATCH
+[Node 24] COMPLETE from Node 72 L0 DISPATCH
+[Node 84] COMPLETE from Node 92 L0 DISPATCH
+[Node 16] COMPLETE from Node 68 L0 DISPATCH
+[Node 28] COMPLETE from Node 48 L0 DISPATCH
+[Node 112] COMPLETE from Node 4 L0 DISPATCH
+[Node 32] COMPLETE from Node 80 L0 DISPATCH
+[Node 92] COMPLETE from Node 4 L0 DISPATCH
+[Node 40] COMPLETE from Node 112 L0 DISPATCH
+[Node 40] COMPLETE from Node 24 L0 DISPATCH
+[Node 60] COMPLETE from Node 96 L0 DISPATCH
+[Node 112] COMPLETE from Node 32 L0 DISPATCH
+[Node 108] COMPLETE from Node 76 L0 DISPATCH
+[Node 76] COMPLETE from Node 104 L0 DISPATCH
+[Node 104] COMPLETE from Node 80 L0 DISPATCH
+[Node 56] COMPLETE from Node 40 L0 DISPATCH
+[Node 80] COMPLETE from Node 76 L0 DISPATCH
+[Node 92] COMPLETE from Node 24 L0 DISPATCH
+[Node 116] COMPLETE from Node 56 L0 DISPATCH
+[Node 84] COMPLETE from Node 48 L0 DISPATCH
+[Node 104] COMPLETE from Node 8 L0 DISPATCH
+[Node 68] COMPLETE from Node 80 L0 DISPATCH
+[Node 24] COMPLETE from Node 32 L0 DISPATCH
+[Node 112] COMPLETE from Node 64 L0 DISPATCH
+[Node 104] COMPLETE from Node 44 L0 DISPATCH
+[Node 20] COMPLETE from Node 0 L0 DISPATCH
+[Node 32] COMPLETE from Node 44 L0 DISPATCH
+[Node 0] COMPLETE from Node 68 L0 DISPATCH
+[Node 56] COMPLETE from Node 96 L0 DISPATCH
+[Node 108] COMPLETE from Node 40 L0 DISPATCH
+[Node 100] COMPLETE from Node 48 L0 DISPATCH
+[Node 8] COMPLETE from Node 96 L0 DISPATCH
+[Node 124] COMPLETE from Node 72 L0 DISPATCH
+[Node 44] COMPLETE from Node 68 L0 DISPATCH
+[Node 32] COMPLETE from Node 20 L0 DISPATCH
+[Node 104] COMPLETE from Node 112 L0 DISPATCH
+[Node 28] COMPLETE from Node 36 L0 DISPATCH
+[Node 56] COMPLETE from Node 16 L0 DISPATCH
+[Node 36] COMPLETE from Node 20 L0 DISPATCH
+[Node 84] COMPLETE from Node 32 L0 DISPATCH
+[Node 76] COMPLETE from Node 84 L0 DISPATCH
+[Node 100] COMPLETE from Node 12 L0 DISPATCH
+[Node 68] COMPLETE from Node 24 L0 DISPATCH
+[Node 16] COMPLETE from Node 100 L0 DISPATCH
+[Node 8] COMPLETE from Node 92 L0 DISPATCH
+[Node 56] COMPLETE from Node 108 L0 DISPATCH
+[Node 112] COMPLETE from Node 104 L0 DISPATCH
+[Node 124] COMPLETE from Node 68 L0 DISPATCH
+[Node 12] COMPLETE from Node 64 L0 DISPATCH
+[Node 8] COMPLETE from Node 112 L0 DISPATCH
+[Node 32] COMPLETE from Node 4 L0 DISPATCH
+[Node 16] COMPLETE from Node 120 L0 DISPATCH
+[Node 68] COMPLETE from Node 20 L0 DISPATCH
+[Node 80] COMPLETE from Node 84 L0 DISPATCH
+[Node 76] COMPLETE from Node 48 L0 DISPATCH
+[Node 116] COMPLETE from Node 92 L0 DISPATCH
+[Node 76] COMPLETE from Node 8 L0 DISPATCH
+[Node 92] COMPLETE from Node 16 L0 DISPATCH
+[Node 16] COMPLETE from Node 92 L0 DISPATCH
+[Node 96] COMPLETE from Node 116 L0 DISPATCH
+[Node 112] COMPLETE from Node 116 L0 DISPATCH
+[Node 12] COMPLETE from Node 84 L0 DISPATCH
+[Node 92] COMPLETE from Node 28 L0 DISPATCH
+[Node 32] COMPLETE from Node 68 L0 DISPATCH
+[Node 44] COMPLETE from Node 104 L0 DISPATCH
+[Node 112] COMPLETE from Node 28 L0 DISPATCH
+[Node 4] COMPLETE from Node 120 L0 DISPATCH
+[Node 32] COMPLETE from Node 76 L0 DISPATCH
+[Node 80] COMPLETE from Node 20 L0 DISPATCH
+[Node 124] COMPLETE from Node 116 L0 DISPATCH
+[Node 60] COMPLETE from Node 44 L0 DISPATCH
+[Node 104] COMPLETE from Node 84 L0 DISPATCH
+[Node 84] COMPLETE from Node 96 L0 DISPATCH
+[Node 72] COMPLETE from Node 80 L0 DISPATCH
+[Node 104] COMPLETE from Node 40 L0 DISPATCH
+[Node 40] COMPLETE from Node 124 L0 DISPATCH
+[Node 100] COMPLETE from Node 104 L0 DISPATCH
+[Node 92] COMPLETE from Node 100 L0 DISPATCH
+[Node 96] COMPLETE from Node 52 L0 DISPATCH
+[Node 96] COMPLETE from Node 36 L0 DISPATCH
+[Node 72] COMPLETE from Node 120 L0 DISPATCH
+[Node 0] COMPLETE from Node 48 L0 DISPATCH
+[Node 68] COMPLETE from Node 56 L0 DISPATCH
+[Node 68] COMPLETE from Node 8 L0 DISPATCH
+[Node 52] COMPLETE from Node 28 L0 DISPATCH
+[Node 44] COMPLETE from Node 72 L0 DISPATCH
+[Node 76] COMPLETE from Node 16 L0 DISPATCH
+[Node 64] COMPLETE from Node 36 L0 DISPATCH
+[Node 60] COMPLETE from Node 88 L0 DISPATCH
+[Node 124] COMPLETE from Node 56 L0 DISPATCH
+[Node 64] COMPLETE from Node 116 L0 DISPATCH
+[Node 68] COMPLETE from Node 36 L0 DISPATCH
+[Node 60] COMPLETE from Node 112 L0 DISPATCH
+[Node 88] COMPLETE from Node 72 L0 DISPATCH
+[Node 104] COMPLETE from Node 32 L0 DISPATCH
+[Node 100] COMPLETE from Node 0 L0 DISPATCH
+[Node 48] COMPLETE from Node 16 L0 DISPATCH
+[Node 88] COMPLETE from Node 84 L0 DISPATCH
+[Node 84] COMPLETE from Node 52 L0 DISPATCH
+[Node 68] COMPLETE from Node 88 L0 DISPATCH
+[Node 124] COMPLETE from Node 40 L0 DISPATCH
+[Node 48] COMPLETE from Node 28 L0 DISPATCH
+[Node 36] COMPLETE from Node 84 L0 DISPATCH
+[Node 8] COMPLETE from Node 20 L0 DISPATCH
+[Node 4] COMPLETE from Node 112 L0 DISPATCH
+[Node 24] COMPLETE from Node 108 L0 DISPATCH
+[Node 72] COMPLETE from Node 24 L0 DISPATCH
+[Node 4] COMPLETE from Node 8 L0 DISPATCH
+[Node 36] COMPLETE from Node 64 L0 DISPATCH
+[Node 16] COMPLETE from Node 32 L0 DISPATCH
+[Node 12] COMPLETE from Node 36 L0 DISPATCH
+[Node 4] COMPLETE from Node 76 L0 DISPATCH
+[Node 52] COMPLETE from Node 64 L0 DISPATCH
+[Node 32] COMPLETE from Node 92 L0 DISPATCH
+[Node 92] COMPLETE from Node 84 L0 DISPATCH
+[Node 28] COMPLETE from Node 76 L0 DISPATCH
+[Node 112] COMPLETE from Node 68 L0 DISPATCH
+[Node 112] COMPLETE from Node 48 L0 DISPATCH
+[Node 0] COMPLETE from Node 112 L0 DISPATCH
+[Node 8] COMPLETE from Node 0 L0 DISPATCH
+[Node 24] COMPLETE from Node 0 L0 DISPATCH
+[Node 16] COMPLETE from Node 4 L0 DISPATCH
+[Node 108] COMPLETE from Node 80 L0 DISPATCH
+[Node 92] COMPLETE from Node 88 L0 DISPATCH
+[Node 68] COMPLETE from Node 16 L0 DISPATCH
+[Node 76] COMPLETE from Node 60 L0 DISPATCH
+[Node 60] COMPLETE from Node 0 L0 DISPATCH
+[Node 0] COMPLETE from Node 124 L0 DISPATCH
+[Node 104] COMPLETE from Node 0 L0 DISPATCH
+[Node 116] COMPLETE from Node 20 L0 DISPATCH
+[Node 28] COMPLETE from Node 44 L0 DISPATCH
+[Node 44] COMPLETE from Node 24 L0 DISPATCH
+[Node 8] COMPLETE from Node 40 L0 DISPATCH
+[Node 92] COMPLETE from Node 96 L0 DISPATCH
+[Node 64] COMPLETE from Node 104 L0 DISPATCH
+[Node 84] COMPLETE from Node 44 L0 DISPATCH
+[Node 64] COMPLETE from Node 0 L0 DISPATCH
+[Node 48] COMPLETE from Node 92 L0 DISPATCH
+[Node 20] COMPLETE from Node 56 L0 DISPATCH
+[Node 100] COMPLETE from Node 28 L0 DISPATCH
+[Node 16] COMPLETE from Node 72 L0 DISPATCH
+[Node 92] COMPLETE from Node 108 L0 DISPATCH
+[Node 20] COMPLETE from Node 68 L0 DISPATCH
+[Node 104] COMPLETE from Node 96 L0 DISPATCH
+[Node 32] COMPLETE from Node 72 L0 DISPATCH
+[Node 72] COMPLETE from Node 16 L0 DISPATCH
+[Node 24] COMPLETE from Node 76 L0 DISPATCH
+[Node 44] COMPLETE from Node 96 L0 DISPATCH
+[Node 12] COMPLETE from Node 100 L0 DISPATCH
+[Node 92] COMPLETE from Node 112 L0 DISPATCH
+[Node 72] COMPLETE from Node 92 L0 DISPATCH
+[Node 48] COMPLETE from Node 100 L0 DISPATCH
+[Node 24] COMPLETE from Node 60 L0 DISPATCH
+[Node 120] COMPLETE from Node 36 L0 DISPATCH
+[Node 88] COMPLETE from Node 20 L0 DISPATCH
+[Node 4] COMPLETE from Node 44 L0 DISPATCH
+[Node 0] COMPLETE from Node 60 L0 DISPATCH
+[Node 56] COMPLETE from Node 28 L0 DISPATCH
+[Node 16] COMPLETE from Node 8 L0 DISPATCH
+[Node 36] COMPLETE from Node 116 L0 DISPATCH
+[Node 16] COMPLETE from Node 44 L0 DISPATCH
+[Node 112] COMPLETE from Node 124 L0 DISPATCH
+[Node 116] COMPLETE from Node 48 L0 DISPATCH
+[Node 52] COMPLETE from Node 24 L0 DISPATCH
+[Node 32] COMPLETE from Node 56 L0 DISPATCH
+[Node 112] COMPLETE from Node 96 L0 DISPATCH
+[Node 92] COMPLETE from Node 76 L0 DISPATCH
+[Node 4] COMPLETE from Node 116 L0 DISPATCH
+[Node 4] COMPLETE from Node 100 L0 DISPATCH
+[Node 108] COMPLETE from Node 24 L0 DISPATCH
+[Node 96] COMPLETE from Node 24 L0 DISPATCH
+[Node 92] COMPLETE from Node 0 L0 DISPATCH
+[Node 12] COMPLETE from Node 112 L0 DISPATCH
+[Node 16] COMPLETE from Node 112 L0 DISPATCH
+[Node 100] COMPLETE from Node 88 L0 DISPATCH
+[Node 60] COMPLETE from Node 32 L0 DISPATCH
+[Node 16] COMPLETE from Node 84 L0 DISPATCH
+[Node 28] COMPLETE from Node 20 L0 DISPATCH
+[Node 0] COMPLETE from Node 116 L0 DISPATCH
+[Node 104] COMPLETE from Node 108 L0 DISPATCH
+[Node 96] COMPLETE from Node 68 L0 DISPATCH
+[Node 104] COMPLETE from Node 16 L0 DISPATCH
+[Node 36] COMPLETE from Node 88 L0 DISPATCH
+[Node 20] COMPLETE from Node 44 L0 DISPATCH
+[Node 32] COMPLETE from Node 48 L0 DISPATCH
+[Node 116] COMPLETE from Node 68 L0 DISPATCH
+[Node 56] COMPLETE from Node 20 L0 DISPATCH
+[Node 72] COMPLETE from Node 76 L0 DISPATCH
+[Node 48] COMPLETE from Node 112 L0 DISPATCH
+[Node 8] COMPLETE from Node 44 L0 DISPATCH
+[Node 84] COMPLETE from Node 120 L0 DISPATCH
+[Node 96] COMPLETE from Node 84 L0 DISPATCH
+[Node 40] COMPLETE from Node 100 L0 DISPATCH
+[Node 80] COMPLETE from Node 64 L0 DISPATCH
+[Node 40] COMPLETE from Node 48 L0 DISPATCH
+[Node 120] COMPLETE from Node 12 L0 DISPATCH
+[Node 96] COMPLETE from Node 72 L0 DISPATCH
+[Node 116] COMPLETE from Node 8 L0 DISPATCH
+[Node 104] COMPLETE from Node 48 L0 DISPATCH
+[Node 60] COMPLETE from Node 56 L0 DISPATCH
+[Node 76] COMPLETE from Node 24 L0 DISPATCH
+[Node 92] COMPLETE from Node 124 L0 DISPATCH
+[Node 24] COMPLETE from Node 48 L0 DISPATCH
+[Node 20] COMPLETE from Node 48 L0 DISPATCH
+[Node 88] COMPLETE from Node 28 L0 DISPATCH
+[Node 12] COMPLETE from Node 44 L0 DISPATCH
+[Node 60] COMPLETE from Node 40 L0 DISPATCH
+[Node 112] COMPLETE from Node 88 L0 DISPATCH
+[Node 40] COMPLETE from Node 0 L0 DISPATCH
+[Node 16] COMPLETE from Node 108 L0 DISPATCH
+[Node 64] COMPLETE from Node 92 L0 DISPATCH
+[Node 20] COMPLETE from Node 108 L0 DISPATCH
+[Node 68] COMPLETE from Node 120 L0 DISPATCH
+[Node 116] COMPLETE from Node 24 L0 DISPATCH
+[Node 108] COMPLETE from Node 8 L0 DISPATCH
+[Node 96] COMPLETE from Node 64 L0 DISPATCH
+[Node 104] COMPLETE from Node 60 L0 DISPATCH
+[Node 44] COMPLETE from Node 80 L0 DISPATCH
+[Node 36] COMPLETE from Node 12 L0 DISPATCH
+[Node 92] COMPLETE from Node 116 L0 DISPATCH
+[Node 52] COMPLETE from Node 88 L0

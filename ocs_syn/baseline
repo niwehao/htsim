@@ -1,0 +1,230 @@
+g++ -std=c++17 -O2 -Wall -Wextra -I../csg-htsim/sim -I. -c main.cpp -o main.o
+g++ -std=c++17 -O2 -Wall -Wextra -I../csg-htsim/sim -I. -c gpu_node.cpp -o gpu_node.o
+g++ -std=c++17 -O2 -Wall -Wextra -I../csg-htsim/sim -I. -o moe_ocs_syn.bin main.o gpu_node.o ../csg-htsim/sim/compositequeue.o ../csg-htsim/sim/ndptunnel.o ../csg-htsim/sim/aeolusqueue.o ../csg-htsim/sim/clock.o ../csg-htsim/sim/ecnqueue.o ../csg-htsim/sim/config.o ../csg-htsim/sim/eqds_logger.o ../csg-htsim/sim/ndp_transfer.o ../csg-htsim/sim/pipe.o ../csg-htsim/sim/roce.o ../csg-htsim/sim/rng.o ../csg-htsim/sim/trigger.o ../csg-htsim/sim/eventlist.o ../csg-htsim/sim/dctcp.o ../csg-htsim/sim/queue_lossless.o ../csg-htsim/sim/queue_lossless_output.o ../csg-htsim/sim/cpqueue.o ../csg-htsim/sim/tcp_periodic.o ../csg-htsim/sim/ecnprioqueue.o ../csg-htsim/sim/sent_packets.o ../csg-htsim/sim/tcppacket.o ../csg-htsim/sim/swiftpacket.o ../csg-htsim/sim/tcp_transfer.o ../csg-htsim/sim/eth_pause_packet.o ../csg-htsim/sim/dctcp_transfer.o ../csg-htsim/sim/cbr.o ../csg-htsim/sim/swift.o ../csg-htsim/sim/cbrpacket.o ../csg-htsim/sim/queue_lossless_input.o ../csg-htsim/sim/route.o ../csg-htsim/sim/randomqueue.o ../csg-htsim/sim/callback_pipe.o ../csg-htsim/sim/routetable.o ../csg-htsim/sim/priopullqueue.o ../csg-htsim/sim/loggers.o ../csg-htsim/sim/tcp.o ../csg-htsim/sim/hpcc.o ../csg-htsim/sim/hpccpacket.o ../csg-htsim/sim/eqds.o ../csg-htsim/sim/compositeprioqueue.o ../csg-htsim/sim/ndp.o ../csg-htsim/sim/qcn.o ../csg-htsim/sim/ndppacket.o ../csg-htsim/sim/strackpacket.o ../csg-htsim/sim/network.o ../csg-htsim/sim/strack.o ../csg-htsim/sim/meter.o ../csg-htsim/sim/swift_scheduler.o ../csg-htsim/sim/rocepacket.o ../csg-htsim/sim/mtcp.o ../csg-htsim/sim/ndptunnelpacket.o ../csg-htsim/sim/logfile.o ../csg-htsim/sim/fairpullqueue.o ../csg-htsim/sim/switch.o ../csg-htsim/sim/queue.o ../csg-htsim/sim/exoqueue.o ../csg-htsim/sim/prioqueue.o ../csg-htsim/sim/eqdspacket.o
+Built: moe_ocs_syn.bin
+./moe_ocs_syn.bin
+=== OCS Synchronized Scheduling Simulation ===
+  GPUs=128 All-to-all (127 targets/GPU) Layers=2 Frags=512x4KB Link=200Gbps
+  SliceActive=106.4us Reconfig=10.0us SliceTotal=116.4us Cycle=14788.5us (14.8ms) Timeout=20.0ms
+
+OCS Schedule (Circle Method, N=128, 127 slots):
+  Slot 0: (128,1) (2,127) (3,126) (4,125) (5,124) (6,123) (7,122) (8,121) ... (64 pairs)
+  Slot 1: (128,127) (1,126) (2,125) (3,124) (4,123) (5,122) (6,121) (7,120) ... (64 pairs)
+  Slot 2: (128,126) (127,125) (1,124) (2,123) (3,122) (4,121) (5,120) (6,119) ... (64 pairs)
+  Slot 3: (128,125) (126,124) (127,123) (1,122) (2,121) (3,120) (4,119) (5,118) ... (64 pairs)
+  Slot 4: (128,124) (125,123) (126,122) (127,121) (1,120) (2,119) (3,118) (4,117) ... (64 pairs)
+  Slot 5: (128,123) (124,122) (125,121) (126,120) (127,119) (1,118) (2,117) (3,116) ... (64 pairs)
+  Slot 6: (128,122) (123,121) (124,120) (125,119) (126,118) (127,117) (1,116) (2,115) ... (64 pairs)
+  Slot 7: (128,121) (122,120) (123,119) (124,118) (125,117) (126,116) (127,115) (1,114) ... (64 pairs)
+  ... (127 slots total)
+
+Sample per-GPU schedule:
+  GPU1: 128 126 124 122 120 118 116 114 112 110 ... (127 slots)
+  GPU2: 127 125 123 121 119 117 115 113 111 109 ... (127 slots)
+  GPU3: 126 124 122 120 118 116 114 112 110 108 ... (127 slots)
+  GPU4: 125 123 121 119 117 115 113 111 109 107 ... (127 slots)
+
+  Loaded BFS routing table from bfs_cache_N128_S127_H16.bin
+[TIMER] BFS routing table: 15 ms
+Topology:
+  Ports: 128
+  Slices: 127
+  Slice active: 106.4 us
+  Cycle time: 14788.5 us (14.8 ms)
+
+BFS Routing Table (max 16 forward hops):
+  States: 128 nodes x 127 slices = 16256
+  FORWARD entries: 1040384  WAIT entries: 1024128  Unreachable: 0
+  Max total distance: 64 slots  Max forward hops: 4
+
+Computing GPU flow schedules (K=127, 2 layers x 2 phases x 127 starting slices)...
+  L0 DISPATCH: 16256 flows, makespan=127 slots (14788.5 us = 14.79 ms)
+  Sample schedule (L0 DISPATCH, startSlice=0):
+    GPU1: 127 flows, first 8: ->128@d0 ->126@d1 ->124@d2 ->122@d3 ->120@d4 ->118@d5 ->116@d6 ->114@d7 ...
+    GPU2: 127 flows, first 8: ->127@d0 ->125@d1 ->123@d2 ->121@d3 ->119@d4 ->117@d5 ->115@d6 ->113@d7 ...
+    GPU3: 127 flows, first 8: ->126@d0 ->124@d1 ->122@d2 ->120@d3 ->118@d4 ->116@d5 ->114@d6 ->112@d7 ...
+    GPU4: 127 flows, first 8: ->125@d0 ->123@d1 ->121@d2 ->119@d3 ->117@d4 ->115@d5 ->113@d6 ->111@d7 ...
+    ... (128 GPUs total)
+  L0 COMBINE: 16256 flows, makespan=127 slots (14788.5 us = 14.79 ms)
+  L1 DISPATCH: 16256 flows, makespan=127 slots (14788.5 us = 14.79 ms)
+  L1 COMBINE: 16256 flows, makespan=127 slots (14788.5 us = 14.79 ms)
+GPU flow schedules computed.
+
+[TIMER] Flow scheduling: 225 ms
+Building 16256 routes...
+Setting up all-to-all phase assignments (2 layers x 2 phases x 128 GPUs x 127 targets)...
+Assigning flow schedules to 128 GPUs...
+
+Expected per-phase time: 14.79 ms (1 cycle = 127 slots)
+Expected total time: ~62.15 ms
+
+Running simulation...
+
+[Node 92] INFERENCE FINISHED  t=62.27 ms
+[Node 128] INFERENCE FINISHED  t=62.27 ms
+[Node 94] INFERENCE FINISHED  t=62.27 ms
+[Node 95] INFERENCE FINISHED  t=62.27 ms
+[Node 96] INFERENCE FINISHED  t=62.27 ms
+[Node 97] INFERENCE FINISHED  t=62.27 ms
+[Node 98] INFERENCE FINISHED  t=62.27 ms
+[Node 99] INFERENCE FINISHED  t=62.27 ms
+[Node 100] INFERENCE FINISHED  t=62.27 ms
+[Node 101] INFERENCE FINISHED  t=62.27 ms
+[Node 93] INFERENCE FINISHED  t=62.27 ms
+[Node 103] INFERENCE FINISHED  t=62.27 ms
+[Node 104] INFERENCE FINISHED  t=62.27 ms
+[Node 105] INFERENCE FINISHED  t=62.27 ms
+[Node 106] INFERENCE FINISHED  t=62.27 ms
+[Node 107] INFERENCE FINISHED  t=62.27 ms
+[Node 108] INFERENCE FINISHED  t=62.27 ms
+[Node 109] INFERENCE FINISHED  t=62.27 ms
+[Node 110] INFERENCE FINISHED  t=62.27 ms
+[Node 111] INFERENCE FINISHED  t=62.27 ms
+[Node 112] INFERENCE FINISHED  t=62.27 ms
+[Node 113] INFERENCE FINISHED  t=62.27 ms
+[Node 114] INFERENCE FINISHED  t=62.27 ms
+[Node 115] INFERENCE FINISHED  t=62.27 ms
+[Node 116] INFERENCE FINISHED  t=62.27 ms
+[Node 117] INFERENCE FINISHED  t=62.27 ms
+[Node 118] INFERENCE FINISHED  t=62.27 ms
+[Node 119] INFERENCE FINISHED  t=62.27 ms
+[Node 120] INFERENCE FINISHED  t=62.27 ms
+[Node 121] INFERENCE FINISHED  t=62.27 ms
+[Node 122] INFERENCE FINISHED  t=62.27 ms
+[Node 123] INFERENCE FINISHED  t=62.27 ms
+[Node 124] INFERENCE FINISHED  t=62.27 ms
+[Node 125] INFERENCE FINISHED  t=62.27 ms
+[Node 126] INFERENCE FINISHED  t=62.27 ms
+[Node 127] INFERENCE FINISHED  t=62.27 ms
+[Node 1] INFERENCE FINISHED  t=62.27 ms
+[Node 2] INFERENCE FINISHED  t=62.27 ms
+[Node 3] INFERENCE FINISHED  t=62.27 ms
+[Node 4] INFERENCE FINISHED  t=62.27 ms
+[Node 5] INFERENCE FINISHED  t=62.27 ms
+[Node 6] INFERENCE FINISHED  t=62.27 ms
+[Node 7] INFERENCE FINISHED  t=62.27 ms
+[Node 8] INFERENCE FINISHED  t=62.27 ms
+[Node 9] INFERENCE FINISHED  t=62.27 ms
+[Node 10] INFERENCE FINISHED  t=62.27 ms
+[Node 11] INFERENCE FINISHED  t=62.27 ms
+[Node 12] INFERENCE FINISHED  t=62.27 ms
+[Node 13] INFERENCE FINISHED  t=62.27 ms
+[Node 14] INFERENCE FINISHED  t=62.27 ms
+[Node 15] INFERENCE FINISHED  t=62.27 ms
+[Node 16] INFERENCE FINISHED  t=62.27 ms
+[Node 17] INFERENCE FINISHED  t=62.27 ms
+[Node 18] INFERENCE FINISHED  t=62.27 ms
+[Node 19] INFERENCE FINISHED  t=62.27 ms
+[Node 20] INFERENCE FINISHED  t=62.27 ms
+[Node 21] INFERENCE FINISHED  t=62.27 ms
+[Node 22] INFERENCE FINISHED  t=62.27 ms
+[Node 23] INFERENCE FINISHED  t=62.27 ms
+[Node 24] INFERENCE FINISHED  t=62.27 ms
+[Node 25] INFERENCE FINISHED  t=62.27 ms
+[Node 26] INFERENCE FINISHED  t=62.27 ms
+[Node 27] INFERENCE FINISHED  t=62.27 ms
+[Node 28] INFERENCE FINISHED  t=62.27 ms
+[Node 29] INFERENCE FINISHED  t=62.27 ms
+[Node 30] INFERENCE FINISHED  t=62.27 ms
+[Node 31] INFERENCE FINISHED  t=62.27 ms
+[Node 32] INFERENCE FINISHED  t=62.27 ms
+[Node 33] INFERENCE FINISHED  t=62.27 ms
+[Node 34] INFERENCE FINISHED  t=62.27 ms
+[Node 35] INFERENCE FINISHED  t=62.27 ms
+[Node 36] INFERENCE FINISHED  t=62.27 ms
+[Node 37] INFERENCE FINISHED  t=62.27 ms
+[Node 38] INFERENCE FINISHED  t=62.27 ms
+[Node 39] INFERENCE FINISHED  t=62.27 ms
+[Node 40] INFERENCE FINISHED  t=62.27 ms
+[Node 41] INFERENCE FINISHED  t=62.27 ms
+[Node 42] INFERENCE FINISHED  t=62.27 ms
+[Node 43] INFERENCE FINISHED  t=62.27 ms
+[Node 44] INFERENCE FINISHED  t=62.27 ms
+[Node 45] INFERENCE FINISHED  t=62.27 ms
+[Node 46] INFERENCE FINISHED  t=62.27 ms
+[Node 47] INFERENCE FINISHED  t=62.27 ms
+[Node 48] INFERENCE FINISHED  t=62.27 ms
+[Node 49] INFERENCE FINISHED  t=62.27 ms
+[Node 50] INFERENCE FINISHED  t=62.27 ms
+[Node 51] INFERENCE FINISHED  t=62.27 ms
+[Node 52] INFERENCE FINISHED  t=62.27 ms
+[Node 53] INFERENCE FINISHED  t=62.27 ms
+[Node 54] INFERENCE FINISHED  t=62.27 ms
+[Node 55] INFERENCE FINISHED  t=62.27 ms
+[Node 56] INFERENCE FINISHED  t=62.27 ms
+[Node 57] INFERENCE FINISHED  t=62.27 ms
+[Node 58] INFERENCE FINISHED  t=62.27 ms
+[Node 59] INFERENCE FINISHED  t=62.27 ms
+[Node 60] INFERENCE FINISHED  t=62.27 ms
+[Node 61] INFERENCE FINISHED  t=62.27 ms
+[Node 62] INFERENCE FINISHED  t=62.27 ms
+[Node 63] INFERENCE FINISHED  t=62.27 ms
+[Node 64] INFERENCE FINISHED  t=62.27 ms
+[Node 65] INFERENCE FINISHED  t=62.27 ms
+[Node 66] INFERENCE FINISHED  t=62.27 ms
+[Node 67] INFERENCE FINISHED  t=62.27 ms
+[Node 68] INFERENCE FINISHED  t=62.27 ms
+[Node 69] INFERENCE FINISHED  t=62.27 ms
+[Node 70] INFERENCE FINISHED  t=62.27 ms
+[Node 71] INFERENCE FINISHED  t=62.27 ms
+[Node 72] INFERENCE FINISHED  t=62.27 ms
+[Node 73] INFERENCE FINISHED  t=62.27 ms
+[Node 74] INFERENCE FINISHED  t=62.27 ms
+[Node 75] INFERENCE FINISHED  t=62.27 ms
+[Node 76] INFERENCE FINISHED  t=62.27 ms
+[Node 77] INFERENCE FINISHED  t=62.27 ms
+[Node 78] INFERENCE FINISHED  t=62.27 ms
+[Node 79] INFERENCE FINISHED  t=62.27 ms
+[Node 80] INFERENCE FINISHED  t=62.27 ms
+[Node 81] INFERENCE FINISHED  t=62.27 ms
+[Node 82] INFERENCE FINISHED  t=62.27 ms
+[Node 83] INFERENCE FINISHED  t=62.27 ms
+[Node 84] INFERENCE FINISHED  t=62.27 ms
+[Node 85] INFERENCE FINISHED  t=62.27 ms
+[Node 86] INFERENCE FINISHED  t=62.27 ms
+[Node 87] INFERENCE FINISHED  t=62.27 ms
+[Node 88] INFERENCE FINISHED  t=62.27 ms
+[Node 89] INFERENCE FINISHED  t=62.27 ms
+[Node 90] INFERENCE FINISHED  t=62.27 ms
+[Node 91] INFERENCE FINISHED  t=62.27 ms
+[Node 102] INFERENCE FINISHED  t=62.27 ms
+
+All 128 nodes finished at t=62.27 ms
+
+============================================================
+        GLOBAL MOE COMMUNICATION STATS
+============================================================
+  Nodes=128 TX=33292288 minTX=33292288 tasks=65024 retx=0 perfect=65024/65024 (100.0%) overhead=0.00%
+============================================================
+
+============================================================
+        OCS EcsBuffer ROUTING STATISTICS (BFS 16-hop)
+============================================================
+  EcsBuffers: 128
+  Packets delivered locally: 66584576
+  Packets forwarded (immediate): 66584576
+  Packets buffered (WAIT): 0
+  Packets through ocs_tx: 66584576
+  Packets through ocs_rx: 66584576
+  Buffer drops: 0
+  OCS TX drops: 0
+  OCS RX drops: 0
+  Misroutes: 0
+  Max buffer used: 0 KB
+  Max ocs_tx queue: 2062 KB
+  Max ocs_rx queue: 8 KB
+  Slice activations: 536
+  Transit rate: 50.00%
+
+  Per-node stats (first 8):
+    Node 1: local=520192 fwd=520192 wait=0 misrt=0 buf=0KB tx=520192 rx=520192
+    Node 2: local=520192 fwd=520192 wait=0 misrt=0 buf=0KB tx=520192 rx=520192
+    Node 3: local=520192 fwd=520192 wait=0 misrt=0 buf=0KB tx=520192 rx=520192
+    Node 4: local=520192 fwd=520192 wait=0 misrt=0 buf=0KB tx=520192 rx=520192
+    Node 5: local=520192 fwd=520192 wait=0 misrt=0 buf=0KB tx=520192 rx=520192
+    Node 6: local=520192 fwd=520192 wait=0 misrt=0 buf=0KB tx=520192 rx=520192
+    Node 7: local=520192 fwd=520192 wait=0 misrt=0 buf=0KB tx=520192 rx=520192
+    Node 8: local=520192 fwd=520192 wait=0 misrt=0 buf=0KB tx=520192 rx=520192
+============================================================
+
+Simulation ended at t=82.18 ms

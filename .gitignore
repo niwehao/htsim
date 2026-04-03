@@ -6,8 +6,12 @@
 *.txt
 *.log
 *.bin
+*.png
+*.pkl
+*.pdf
+*.pyc
 
 
-# 保留所有层级的 log 目录及其内容
-!**/log/
-!**/log/**
+#忽略TEST目录下的所有文件，不保留TEST目录
+TEST/*
+

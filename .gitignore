@@ -14,5 +14,5 @@
 
 #忽略TEST目录下的所有文件，不保留TEST目录
 TEST/*
-
+TEST/csg-htsim
 

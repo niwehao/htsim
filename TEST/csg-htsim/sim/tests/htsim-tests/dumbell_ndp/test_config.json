@@ -1,3 +1,0 @@
-{
-    "params": ["oversubscribed_cc", "conns", "end", "rts", "cwnd", "q", "ecn_thresh", "linkspeed", "seed", "mtu"]
-}
